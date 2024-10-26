@@ -1,1 +1,1 @@
-message("LessonCode dir")
+add_subdirectory(week01/homework)
