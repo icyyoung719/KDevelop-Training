@@ -1,6 +1,9 @@
 ﻿#include<iostream>
+#include <regex>
 #include "Scanner.h"
 #include "Parser.h"
+#include "JsonElement.h"
+#include "util.h"
 
 int main() {
     using namespace json;
@@ -21,120 +24,82 @@ int main() {
         }
     )";
 
-    auto source2 = R"(
-{
-    "time": "2018-09-22 12:37:21",
-    "cityInfo": {
-        "city": "天津市",
-        "cityId": "101030100",
-        "parent": "天津",
-        "updateTime": "12:32"
-    },
-    "date": "20180922",
-    "message": "Success !",
-    "status": 200,
-    "data": {
-        "shidu": "22%",
-        "pm25": 15.0,
-        "pm10": 46.0,
-        "quality": "优",
-        "wendu": "24",
-        "ganmao": "各类人群可自由活动",
-        "yesterday": {
-            "date": "21",
-            "ymd": "2018-09-21",
-            "week": "星期五",
-            "sunrise": "05:56",
-            "high": "高温 25.0℃",
-            "low": "低温 15.0℃",
-            "sunset": "18:12",
-            "aqi": 108.0,
-            "fx": "西北风",
-            "fl": "4-5级",
-            "type": "晴",
-            "notice": "愿你拥有比阳光明媚的心情"
-        },
-        "forecast": [
-            {
-                "date": "22",
-                "ymd": "2018-09-22",
-                "week": "星期六",
-                "sunrise": "05:57",
-                "high": "高温 26.0℃",
-                "low": "低温 15.0℃",
-                "sunset": "18:10",
-                "aqi": 55.0,
-                "fx": "西北风",
-                "fl": "4-5级",
-                "type": "晴",
-                "notice": "愿你拥有比阳光明媚的心情"
-            },
-            {
-                "date": "23",
-                "ymd": "2018-09-22",
-                "week": "星期日",
-                "sunrise": "05:58",
-                "high": "高温 23.0℃",
-                "low": "低温 14.0℃",
-                "sunset": "18:09",
-                "aqi": 29.0,
-                "fx": "西北风",
-                "fl": "4-5级",
-                "type": "晴",
-                "notice": "愿你拥有比阳光明媚的心情"
-            },
-            {
-                "date": "24",
-                "ymd": "2018-09-22",
-                "week": "星期一",
-                "sunrise": "05:59",
-                "high": "高温 24.0℃",
-                "low": "低温 15.0℃",
-                "sunset": "18:07",
-                "aqi": 25.0,
-                "fx": "西北风",
-                "fl": "<3级",
-                "type": "晴",
-                "notice": "愿你拥有比阳光明媚的心情"
-            },
-            {
-                "date": "25",
-                "ymd": "2018-09-22",
-                "week": "星期二",
-                "sunrise": "06:00",
-                "high": "高温 24.0℃",
-                "low": "低温 16.0℃",
-                "sunset": "18:05",
-                "aqi": 56.0,
-                "fx": "西南风",
-                "fl": "<3级",
-                "type": "晴",
-                "notice": "愿你拥有比阳光明媚的心情"
-            },
-            {
-                "date": "26",
-                "ymd": "2018-09-22",
-                "week": "星期三",
-                "sunrise": "06:01",
-                "high": "高温 24.0℃",
-                "low": "低温 17.0℃",
-                "sunset": "18:04",
-                "aqi": 86.0,
-                "fx": "西南风",
-                "fl": "3-4级",
-                "type": "阴",
-                "notice": "不要被阴云遮挡住好心情"
-            }
-        ]
-    }
-}
-    )";
 
-    Scanner scanner(source2);
-    Parser parser(scanner);
+    Scanner scanner(source);
+    Parser  parser(scanner);
+    //now the member scanner_ of parser is identical to scanner
 
     JsonElement* element = parser.Parse();
+    //We use the map container, which will automatically sort the key-value pairs according to the key
     std::cout << element->toString() << std::endl;
+
+    //output the value of "name" inputed in JsonElement
+    //for JsonObjects in the root Json, inputs like ["player"]["name"]
+    //for JsonArray in the root Json, inputs like ["scores"][0]
+    std::cout << element->getObject(std::string("name"))->toString() << std::endl;
+    std::cout << element->getObject(std::string("scores"))->getArrayElement(0)->toString() << std::endl;
+
+    std::string input_string{ "" };
+
+
+    while (true) {
+        std::cout << "----------------------------------------------------" << std::endl;
+        std::cout << "Enter a command: "<<std::endl;
+        std::cout<<R"(Enter "exit" or "q" to exit)"<<std::endl;
+        std::cout<<R"(Enter "1" to output the whole Json)"<<std::endl;
+        std::cout<<R"(For JsonObjects in the root Json, inputs like ["player"]["name"] or ["scores"])"<<std::endl;
+        std::cout<<R"(For JsonArray in the root Json, inputs like ["scores"][0])"<<std::endl<<std::endl;
+        std::getline(std::cin, input_string);  // scan the input string 
+        if (input_string == "exit" || input_string == "q") {
+            std::cout<<std::endl<<"Exiting..." << std::endl;
+            break;
+        }
+        else if (input_string == "1") {
+            std::cout << element->toString() << std::endl;
+        }
+        else {
+            // Use std::regex to match the JSON path syntax
+            std::regex re(R"(\[\"([^\"]+)\"\]|\[(\d+)\])");
+            std::smatch match;
+            std::sregex_iterator it(input_string.begin(), input_string.end(), re);
+            std::sregex_iterator end;
+
+            JsonElement* current = element;
+            bool validPath = true;
+
+            //no match
+            if (it == end) {
+                std::cout << "Invalid path format." << std::endl;
+                validPath = false;
+            }
+
+            // Iterate over all matches in the input string
+            for (; it != end; ++it) {
+                std::smatch match = *it;
+
+                if (match[1].matched) { // Match for ["key"]
+                    std::string key = match[1].str();
+                    current = current->getObject(key);
+                }
+                else if (match[2].matched) { // Match for [index]
+                    int index = std::stoi(match[2].str());
+                    current = current->getArrayElement(index);
+                }
+
+                // Check if current element is valid
+                if (current == nullptr) {
+                    std::cout << "Invalid path or element not found." << std::endl;
+                    validPath = false;
+                    break;
+                }
+            }
+
+            // If the path is valid, output the result
+            if (validPath && current != nullptr) {
+                std::cout << "Result: " << current->toString() << std::endl;
+            }
+        }
+    }
 
     delete element;
     return 0;

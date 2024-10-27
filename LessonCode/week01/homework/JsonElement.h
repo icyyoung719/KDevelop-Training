@@ -21,16 +21,6 @@ namespace json {
 			JSON_OBJECT
 		};
 
-		union Value
-		{
-			JsonObject* value_object;
-			JsonArray* value_array;
-
-			std::string* value_string;
-			double value_number;
-			bool value_bool;
-
-		};
 
 
 
@@ -191,9 +181,37 @@ namespace json {
 			return os;
 		}
 
+		// getObject()
+		JsonElement* getObject(const std::string& key) {
+			if (type_ != Type::JSON_OBJECT) {
+				Error("Type of JsonElement isn't JSON_OBJECT");
+			}
+            return value_.value_object->at(key);
+		}
+		// getArray()
+		JsonElement* getArrayElement(const int& index) {
+            if (type_ != Type::JSON_ARRAY) {
+				Error("Type of JsonElement isn't JSON_ARRAY");
+			}
+			return value_.value_array->at(index);
+        }
+
+
 
 	private:
 		Type type_;
+
+		union Value
+		{
+			JsonObject* value_object;
+			JsonArray* value_array;
+
+			std::string* value_string;
+			double value_number;
+			bool value_bool;
+
+		};
+
 		Value value_;
 	};
 }
