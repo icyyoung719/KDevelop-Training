@@ -31,10 +31,6 @@ int main() {
     //We use the map container, which will automatically sort the key-value pairs according to the key
     std::cout << element->toString() << std::endl;
 
-    //output the value of "name" inputed in JsonElement
-    //for JsonObjects in the root Json, inputs like ["player"]["name"]
-    //for JsonArray in the root Json, inputs like ["scores"][0]
-
     std::string input_string{ "" };
 
 
