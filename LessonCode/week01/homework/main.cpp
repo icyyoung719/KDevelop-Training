@@ -1,6 +1,7 @@
 ﻿#include<iostream>
 #include <regex>
 #include<fstream>
+#include <memory>
 #include "Scanner.h"
 #include "Parser.h"
 #include "JsonElement.h"
@@ -26,8 +27,17 @@ int main() {
     Scanner scanner(source);
     Parser  parser(scanner);
     //now the member scanner_ of parser is identical to scanner
+    std::unique_ptr<JsonElement> element;
 
-    JsonElement* element = parser.Parse();
+    try {
+        element = parser.Parse();
+    } catch (const std::logic_error& e) {
+        std::cout << "Pre-defined exception caught: " << e.what() << std::endl;
+        return 1;
+    } catch (const std::exception& e) {
+        std::cout << "Unexpected exception caught: " << e.what() << std::endl;
+        return 1;
+    }
     //We use the map container, which will automatically sort the key-value pairs according to the key
     std::cout << element->toString() << std::endl;
 
@@ -56,7 +66,7 @@ int main() {
             std::sregex_iterator it(input_string.begin(), input_string.end(), re);
             std::sregex_iterator end;
 
-            JsonElement* current = element;
+            JsonElement* current = element.get();
             bool validPath = true;
 
             //no match
@@ -97,22 +107,14 @@ int main() {
                     }
                     current = current->getArrayElement(index);
                 }
-
-                // Check if current element is valid
-                if (current == nullptr) {
-                    std::cout << "Invalid path or element not found." << std::endl;
-                    validPath = false;
-                    break;
-                }
             }
 
             // If the path is valid, output the result
-            if (validPath && current != nullptr) {
+            if (validPath) {
                 std::cout << "Value: " << current->toString() << std::endl;
             }
         }
     }
 
-    delete element;
     return 0;
 }

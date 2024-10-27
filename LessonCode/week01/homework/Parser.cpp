@@ -2,8 +2,8 @@
 
 namespace json {
     using TokenType = Scanner::TokenType;
-    JsonElement* Parser::Parse() {
-        JsonElement* elem = new JsonElement();
+    std::unique_ptr<JsonElement> Parser::Parse() {
+        std::unique_ptr<JsonElement> elem = std::make_unique<JsonElement>();
         TokenType token_type = scanner_.nextToken();
 
         switch (token_type)
@@ -12,18 +12,15 @@ namespace json {
             break;
         }
         case TokenType::BGEIN_OF_OBJECT: {
-            JsonObject* object = ParseObject();
-            elem->value(object);
+            elem->value(ParseObject());
             break;
         }
         case TokenType::BEGIN_OF_ARRAY: {
-            JsonArray* array = ParseArray();
-            elem->value(array);
+            elem->value(ParseArray());
             break;
         }
         case TokenType::VALUE_STRING: {
-            std::string* value = new std::string(scanner_.getValueString());
-            elem->value(value);
+            elem->value(std::make_unique<std::string>(scanner_.getValueString()));
             break;
         }
         case TokenType::VALUE_NUMBER: {
@@ -44,10 +41,10 @@ namespace json {
         default:
             break;
         }
-        return elem;
+        return std::move(elem);
     }
-    JsonObject* Parser::ParseObject() {
-        JsonObject* res = new JsonObject();
+    std::unique_ptr<JsonObject> Parser::ParseObject() {
+        std::unique_ptr<JsonObject> res = std::make_unique<JsonObject>();
         TokenType next = scanner_.nextToken();
         if (next == TokenType::END_OF_OBJECT) {
             return res;
@@ -64,8 +61,10 @@ namespace json {
             if (next != TokenType::KEY_VALUE_SEPARATOR) {
                 Error("Error: Object key must be followed by ':'");
             }
+            //The Parse for the key will cause error: È¨ÏÞ²»×ã
             (*res)[key] = Parse();
             next = scanner_.nextToken();
+
             if (next == TokenType::END_OF_OBJECT) {
                 break;
             }
@@ -79,8 +78,8 @@ namespace json {
 
         return res;
     }
-    JsonArray* Parser::ParseArray() {
-        JsonArray* res = new JsonArray();
+    std::unique_ptr<JsonArray> Parser::ParseArray() {
+        std::unique_ptr<JsonArray> res = std::make_unique<JsonArray>();
         TokenType next = scanner_.nextToken();
         if (next == TokenType::END_OF_ARRAY) {
             return res;

@@ -6,11 +6,11 @@ namespace json {
     class Parser {
     public:
         Parser(const Scanner& scanner) : scanner_(scanner) {}
-        JsonElement* Parse();
+        std::unique_ptr<JsonElement> Parse();
 
     private:
-        JsonObject* ParseObject();
-        JsonArray* ParseArray();
+        std::unique_ptr<JsonObject> ParseObject();
+        std::unique_ptr<JsonArray> ParseArray();
 
     private:
         Scanner scanner_;

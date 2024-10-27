@@ -1,16 +1,16 @@
 #include "JsonElement.h"
-
+#include<memory>
 namespace json {
 	JsonElement::JsonElement(const Type& type) : type_(type) {
 		switch (type) {
 		case Type::JSON_OBJECT:
-			value_.value_object = new std::map<std::string, JsonElement*>();
+			value_.value_object = std::make_unique<JsonObject>();
 			break;
 		case Type::JSON_ARRAY:
-			value_.value_array = new std::vector<JsonElement*>();
+			value_.value_array = std::make_unique<JsonArray>();
 			break;
 		case Type::JSON_STRING:
-			value_.value_string = new std::string("");
+			value_.value_string = std::make_unique<std::string>();
 			break;
 		case Type::JSON_NUMBER:
 			value_.value_number = 0;
@@ -25,38 +25,21 @@ namespace json {
 		}
 	};
 
-	JsonElement::~JsonElement() {
-		if (type_ == Type::JSON_OBJECT) {
-			JsonObject* object = value_.value_object;
-			for (auto iter = object->begin(); iter != object->end(); ++iter) {
-				delete iter->second;
-			}
-			delete object;
-		}
-		else if (type_ == Type::JSON_ARRAY) {
-			JsonArray* array = value_.value_array;
-			for (auto iter = array->begin(); iter != array->end(); ++iter) {
-				delete* iter;
-			}
-			delete array;
-		}
-		else if (type_ == Type::JSON_STRING) {
-			std::string* val = value_.value_string;
-			delete val;
-		}
+	JsonElement::Type JsonElement::getType() {
+		return type_;
 	}
 
-	void JsonElement::value(JsonObject* value_object) {
+	void JsonElement::value(std::unique_ptr<JsonObject> value_object) {
 		type_ = Type::JSON_OBJECT;
-		value_.value_object = value_object;
+		value_.value_object = std::move(value_object);
 	}
-	void JsonElement::value(JsonArray* value_array) {
+	void JsonElement::value(std::unique_ptr<JsonArray> value_array) {
 		type_ = Type::JSON_ARRAY;
-		value_.value_array = value_array;
+		value_.value_array = std::move(value_array);
 	}
-	void JsonElement::value(std::string* value_string) {
+	void JsonElement::value(std::unique_ptr<std::string> value_string) {
 		type_ = Type::JSON_STRING;
-		value_.value_string = value_string;
+		value_.value_string = std::move(value_string);
 	}
 	void JsonElement::value(double value_number) {
 		type_ = Type::JSON_NUMBER;
@@ -66,23 +49,20 @@ namespace json {
 		type_ = Type::JSON_BOOL;
 		value_.value_bool = value_bool;
 	}
-	JsonElement::Type JsonElement::getType() {
-		return type_;
-	}
 
 	JsonObject* JsonElement::asObject() {
 		if (type_ == Type::JSON_OBJECT)
-			return value_.value_object;
+			return value_.value_object.get();
 		Error("Type of JsonElement isn't JSON_OBJECT");
 	}
 	JsonArray* JsonElement::asArray() {
 		if (type_ == Type::JSON_ARRAY)
-			return value_.value_array;
+			return value_.value_array.get();
 		Error("Type of JsonElement isn't JSON_ARRAY");
 	}
-	std::string* JsonElement::asString() {
+	const std::string& JsonElement::asString() {
 		if (type_ == Type::JSON_STRING)
-			return value_.value_string;
+			return *(value_.value_string);
 		Error("Type of JsonElement isn't JSON_STRING");
 	}
 	double JsonElement::asNumber() {
@@ -160,12 +140,12 @@ namespace json {
 		if (type_ != Type::JSON_OBJECT) {
 			Error("Type of JsonElement isn't JSON_OBJECT");
 		}
-		return value_.value_object->at(key);
+		return value_.value_object->at(key).get();
 	}
 	JsonElement* JsonElement::getArrayElement(const int& index) {
 		if (type_ != Type::JSON_ARRAY) {
 			Error("Type of JsonElement isn't JSON_ARRAY");
 		}
-		return value_.value_array->at(index);
+		return value_.value_array->at(index).get();
 	}
 }
