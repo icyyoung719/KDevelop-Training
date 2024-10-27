@@ -10,6 +10,10 @@ namespace json {
 	using JsonObject = std::map<std::string, JsonElement*>;
 	using JsonArray = std::vector<JsonElement*>;
 
+	namespace {
+		int g_indentLevel = 0;
+	}
+
 	class JsonElement {
 	public:
 		enum class Type {
@@ -130,11 +134,13 @@ namespace json {
 			Error("Type of JsonElement isn't JSON_BOOL");
 		}
 
-		std::string toString() {
+		std::string toString() const {
 			std::stringstream ss;
+			std::string indent(g_indentLevel, '\t');
+
 			switch (type_) {
 			case Type::JSON_STRING:
-				ss << "\"" << *(value_.value_string) << "\"";
+				ss <<"\"" << *(value_.value_string) << "\"";
 				break;
 			case Type::JSON_NUMBER:
 				ss << value_.value_number;
@@ -160,24 +166,32 @@ namespace json {
 		// Overloading << for JSON_OBJECT
 		friend std::ostream& operator<<(std::ostream& os, const JsonObject& object) {
 			os << "{"<< std::endl;
+            g_indentLevel++;
+			std::string indent(g_indentLevel, '\t');
 			for (auto iter = object.begin(); iter != object.end(); ++iter) {
-				os << '\"' << iter->first << "\": " << iter->second->toString();
+				os << indent << '\"' << iter->first << "\": " << iter->second->toString();
 				if (std::next(iter) != object.end()) {
 					os << ", "<<std::endl;
 				}
 			}
-			os <<std::endl<< "}";
+			indent.pop_back();
+            g_indentLevel--;
+			os <<std::endl<< indent << "}";
 			return os;
 		}
 		friend std::ostream& operator<<(std::ostream& os, const JsonArray& array) {
 			os << "["<< std::endl;
+			g_indentLevel++;
+			std::string indent(g_indentLevel, '\t');
 			for (size_t i = 0; i < array.size(); i++) {
-				os << array[i]->toString();
+				os << indent << array[i]->toString();
 				if (i != array.size() - 1) {
 					os << ", "<<std::endl;
 				}
 			}
-			os <<std::endl<< "]";
+			indent.pop_back();
+			g_indentLevel--;
+			os << std::endl << indent << "]";
 			return os;
 		}
 
