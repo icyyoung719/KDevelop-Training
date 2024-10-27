@@ -3,6 +3,7 @@
 #include<map>
 #include<vector>
 #include<sstream>
+#include<variant>
 #include<memory>
 #include "util.h"
 
@@ -61,17 +62,16 @@ namespace json {
 
 	private:
 		Type type_;
-		struct Value
-		{
-			std::unique_ptr<JsonObject> value_object;
-			std::unique_ptr<JsonArray> value_array;
 
-			std::unique_ptr<std::string> value_string;
-			double value_number;
-			bool value_bool;
-			Value() {}
-			~Value() {}
-		};
+		using Value = std::variant<
+			std::monostate,                      // Represent JSON_NULL (empty state)
+			std::unique_ptr<JsonObject>,         // Represent JSON_OBJECT
+			std::unique_ptr<JsonArray>,          // Represent JSON_ARRAY
+			std::unique_ptr<std::string>,        // Represent JSON_STRING
+			double,                              // Represent JSON_NUMBER
+			bool                                 // Represent JSON_BOOL
+		>;
+
 		Value value_;
 	};
 }

@@ -66,6 +66,7 @@ int main() {
             std::sregex_iterator it(input_string.begin(), input_string.end(), re);
             std::sregex_iterator end;
 
+            //current is used to trace current JsonElement, to output wanted JsonElement
             JsonElement* current = element.get();
             bool validPath = true;
 

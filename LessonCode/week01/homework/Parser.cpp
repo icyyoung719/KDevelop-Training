@@ -61,7 +61,7 @@ namespace json {
             if (next != TokenType::KEY_VALUE_SEPARATOR) {
                 Error("Error: Object key must be followed by ':'");
             }
-            //The Parse for the key will cause error: È¨ÏÞ²»×ã
+            //Above to check the key, now to check the value
             (*res)[key] = Parse();
             next = scanner_.nextToken();
 

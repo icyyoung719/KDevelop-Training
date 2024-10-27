@@ -4,23 +4,25 @@ namespace json {
 	JsonElement::JsonElement(const Type& type) : type_(type) {
 		switch (type) {
 		case Type::JSON_OBJECT:
-			value_.value_object = std::make_unique<JsonObject>();
+			value_ = std::make_unique<JsonObject>();
 			break;
 		case Type::JSON_ARRAY:
-			value_.value_array = std::make_unique<JsonArray>();
+			value_ = std::make_unique<JsonArray>();
 			break;
 		case Type::JSON_STRING:
-			value_.value_string = std::make_unique<std::string>();
+			value_ = std::make_unique<std::string>();
 			break;
 		case Type::JSON_NUMBER:
-			value_.value_number = 0;
+			value_ = 0.0;
 			break;
 		case Type::JSON_BOOL:
-			value_.value_bool = false;
+			value_ = false;
 			break;
 		case Type::JSON_NULL:
+			value_ = std::monostate{};
 			break;
 		default:
+			Error("Unknown JSON type");
 			break;
 		}
 	};
@@ -31,48 +33,48 @@ namespace json {
 
 	void JsonElement::value(std::unique_ptr<JsonObject> value_object) {
 		type_ = Type::JSON_OBJECT;
-		value_.value_object = std::move(value_object);
+		value_ = std::move(value_object);
 	}
 	void JsonElement::value(std::unique_ptr<JsonArray> value_array) {
 		type_ = Type::JSON_ARRAY;
-		value_.value_array = std::move(value_array);
+		value_ = std::move(value_array);
 	}
 	void JsonElement::value(std::unique_ptr<std::string> value_string) {
 		type_ = Type::JSON_STRING;
-		value_.value_string = std::move(value_string);
+		value_ = std::move(value_string);
 	}
 	void JsonElement::value(double value_number) {
 		type_ = Type::JSON_NUMBER;
-		value_.value_number = value_number;
+		value_ = value_number;
 	}
 	void JsonElement::value(bool value_bool) {
 		type_ = Type::JSON_BOOL;
-		value_.value_bool = value_bool;
+		value_ = value_bool;
 	}
 
 	JsonObject* JsonElement::asObject() {
 		if (type_ == Type::JSON_OBJECT)
-			return value_.value_object.get();
+			return std::get<std::unique_ptr<JsonObject>>(value_).get();
 		Error("Type of JsonElement isn't JSON_OBJECT");
 	}
 	JsonArray* JsonElement::asArray() {
 		if (type_ == Type::JSON_ARRAY)
-			return value_.value_array.get();
+			return std::get<std::unique_ptr<JsonArray>>(value_).get();
 		Error("Type of JsonElement isn't JSON_ARRAY");
 	}
 	const std::string& JsonElement::asString() {
 		if (type_ == Type::JSON_STRING)
-			return *(value_.value_string);
+			return *std::get<std::unique_ptr<std::string>>(value_);
 		Error("Type of JsonElement isn't JSON_STRING");
 	}
 	double JsonElement::asNumber() {
 		if (type_ == Type::JSON_NUMBER)
-			return value_.value_number;
+			return std::get<double>(value_);
 		Error("Type of JsonElement isn't JSON_NUMBER");
 	}
 	bool JsonElement::asBool() {
 		if (type_ == Type::JSON_BOOL)
-			return value_.value_bool;
+			return std::get<bool>(value_);
 		Error("Type of JsonElement isn't JSON_BOOL");
 	}
 
@@ -82,22 +84,22 @@ namespace json {
 
 		switch (type_) {
 		case Type::JSON_STRING:
-			ss << "\"" << *(value_.value_string) << "\"";
+			ss << "\"" << *std::get<std::unique_ptr<std::string>>(value_) << "\"";
 			break;
 		case Type::JSON_NUMBER:
-			ss << value_.value_number;
+			ss << std::get<double>(value_);
 			break;
 		case Type::JSON_BOOL:
-			ss << (value_.value_bool ? "true" : "false");
+			ss << (std::get<bool>(value_) ? "true" : "false");
 			break;
 		case Type::JSON_NULL:
 			ss << "null";
 			break;
 		case Type::JSON_ARRAY:
-			ss << *value_.value_array;
+			ss << *std::get<std::unique_ptr<JsonArray>>(value_);
 			break;
 		case Type::JSON_OBJECT:
-			ss << *value_.value_object;
+			ss << *std::get<std::unique_ptr<JsonObject>>(value_);
 			break;
 		default:
 			Error("Unknown type of JsonElement");
@@ -140,12 +142,12 @@ namespace json {
 		if (type_ != Type::JSON_OBJECT) {
 			Error("Type of JsonElement isn't JSON_OBJECT");
 		}
-		return value_.value_object->at(key).get();
+		return std::get<std::unique_ptr<JsonObject>>(value_)->at(key).get();
 	}
 	JsonElement* JsonElement::getArrayElement(const int& index) {
 		if (type_ != Type::JSON_ARRAY) {
 			Error("Type of JsonElement isn't JSON_ARRAY");
 		}
-		return value_.value_array->at(index).get();
+		return std::get<std::unique_ptr<JsonArray>>(value_)->at(index).get();
 	}
 }
