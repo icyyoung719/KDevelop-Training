@@ -1,29 +1,27 @@
 ﻿#include<iostream>
 #include <regex>
+#include<fstream>
 #include "Scanner.h"
 #include "Parser.h"
 #include "JsonElement.h"
-#include "util.h"
 
 int main() {
     using namespace json;
-    auto source = R"(
-        {
-            "name": "John",
-            "age": 30,
-            "age2": true,
-            "player":{
-                "name":"Tom",
-                "age": 20
-            },
-            "scores":[
-                1,
-                2,
-                3,
-            ]
-        }
-    )";
 
+    std::string file_path;
+    std::cout << "Please enter the JSON file path: "<<std::endl;
+    std::cout<<R"(Example: C:\Users\icyyoung\Desktop\C++\JsonFile.json)"<<std::endl;
+    std::getline(std::cin, file_path);
+
+    std::ifstream file(file_path);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open the file: " << file_path << std::endl;
+        return 1;
+    }
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string source = buffer.str();
+    file.close();
 
     Scanner scanner(source);
     Parser  parser(scanner);
@@ -36,8 +34,6 @@ int main() {
     //output the value of "name" inputed in JsonElement
     //for JsonObjects in the root Json, inputs like ["player"]["name"]
     //for JsonArray in the root Json, inputs like ["scores"][0]
-    std::cout << element->getObject(std::string("name"))->toString() << std::endl;
-    std::cout << element->getObject(std::string("scores"))->getArrayElement(0)->toString() << std::endl;
 
     std::string input_string{ "" };
 
@@ -79,10 +75,30 @@ int main() {
 
                 if (match[1].matched) { // Match for ["key"]
                     std::string key = match[1].str();
+                    if (current->getType() != JsonElement::Type::JSON_OBJECT) {
+                        std::cout << "Invalid key, not a JsonObject." << std::endl;
+                        validPath = false;
+                        break;
+                    }
+                    if(current->asObject()->find(key) == current->asObject()->end()) {
+                        std::cout << "Key not found." << std::endl;
+                        validPath = false;
+                        break;
+                    }
                     current = current->getObject(key);
                 }
                 else if (match[2].matched) { // Match for [index]
                     int index = std::stoi(match[2].str());
+                    if (current->getType() != JsonElement::Type::JSON_ARRAY) {
+                        std::cout<<"Invalid index, not a JsonArray."<<std::endl;
+                        validPath = false;
+                        break;
+                    }
+                    if (index >= current->asArray()->size()) {
+                        std::cout << "Index out of range." << std::endl;
+                        validPath = false;
+                        break;
+                    }
                     current = current->getArrayElement(index);
                 }
 
@@ -96,7 +112,7 @@ int main() {
 
             // If the path is valid, output the result
             if (validPath && current != nullptr) {
-                std::cout << "Result: " << current->toString() << std::endl;
+                std::cout << "Value: " << current->toString() << std::endl;
             }
         }
     }

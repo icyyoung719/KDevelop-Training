@@ -159,25 +159,25 @@ namespace json {
 
 		// Overloading << for JSON_OBJECT
 		friend std::ostream& operator<<(std::ostream& os, const JsonObject& object) {
-			os << "{";
+			os << "{"<< std::endl;
 			for (auto iter = object.begin(); iter != object.end(); ++iter) {
 				os << '\"' << iter->first << "\": " << iter->second->toString();
 				if (std::next(iter) != object.end()) {
-					os << ", ";
+					os << ", "<<std::endl;
 				}
 			}
-			os << "}";
+			os <<std::endl<< "}";
 			return os;
 		}
 		friend std::ostream& operator<<(std::ostream& os, const JsonArray& array) {
-			os << "[";
+			os << "["<< std::endl;
 			for (size_t i = 0; i < array.size(); i++) {
 				os << array[i]->toString();
 				if (i != array.size() - 1) {
-					os << ", ";
+					os << ", "<<std::endl;
 				}
 			}
-			os << "]";
+			os <<std::endl<< "]";
 			return os;
 		}
 
@@ -196,11 +196,8 @@ namespace json {
 			return value_.value_array->at(index);
         }
 
-
-
 	private:
 		Type type_;
-
 		union Value
 		{
 			JsonObject* value_object;
@@ -211,7 +208,6 @@ namespace json {
 			bool value_bool;
 
 		};
-
 		Value value_;
 	};
 }
