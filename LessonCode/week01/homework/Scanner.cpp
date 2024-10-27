@@ -20,8 +20,11 @@ namespace json
 	std::string Scanner::getValueString() {
 		return value_string_;
 	}
-	double Scanner::getValueNumber() {
-		return value_number_;
+	int Scanner::getValueInt() {
+		return value_int_;
+	}
+	double Scanner::getValueDouble() {
+		return value_double_;
 	}
 	void Scanner::Rollback() {
 		current_pos_ = prev_pos_;
@@ -51,22 +54,34 @@ namespace json
 		Advance();
 		value_string_ = source_.substr(pos, current_pos_ - pos - 1);
 	}
-	void Scanner::ScanNumber() {
-		//"num":120
+	bool Scanner::ScanNumber() {
+		bool is_double = false;
 		size_t pos = current_pos_ - 1;
+
 		while (std::isdigit(Peek())) {
 			Advance();
 		}
 
-		if (Peek() == '.' && std::isdigit(PeekNext())) {
-			Advance();
-			while (std::isdigit(Peek())) {
+		if (Peek() == '.') {
+			is_double = true;
+			if(std::isdigit(PeekNext())){
 				Advance();
+				while (std::isdigit(Peek())) {
+					Advance();
+				}
 			}
-
+			else {
+                Error("Invalid number: missing digit after \".\"");
+			}
 		}
 
-		value_number_ = std::stod(source_.substr(pos, current_pos_ - pos));
+		if (is_double) {
+			value_double_ = std::stod(source_.substr(pos, current_pos_ - pos));
+		}
+        else {
+            value_int_ = std::stoi(source_.substr(pos, current_pos_ - pos));
+		}
+        return is_double;
 	}
 
 	// return next token(exclude white space)
@@ -120,8 +135,7 @@ namespace json
 		case '7':
 		case '8':
 		case '9':
-			ScanNumber();
-			return TokenType::VALUE_NUMBER;
+			return ScanNumber() ? TokenType::VALUE_DOUBLE : TokenType::VALUE_INT;
 		default:
 			Error("Unexpected character:" + c);
 		}

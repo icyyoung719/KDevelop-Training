@@ -32,10 +32,10 @@ int main() {
     try {
         element = parser.Parse();
     } catch (const std::logic_error& e) {
-        std::cout << "Pre-defined exception caught: " << e.what() << std::endl;
+        std::cout << "Pre-defined exception caught when parsing: " << e.what() << std::endl;
         return 1;
     } catch (const std::exception& e) {
-        std::cout << "Unexpected exception caught: " << e.what() << std::endl;
+        std::cout << "Unexpected exception caught when parsing: " << e.what() << std::endl;
         return 1;
     }
     //We use the map container, which will automatically sort the key-value pairs according to the key

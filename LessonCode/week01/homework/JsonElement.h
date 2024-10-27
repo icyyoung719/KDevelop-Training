@@ -20,7 +20,8 @@ namespace json {
 	public:
 		enum class Type {
 			JSON_STRING,
-			JSON_NUMBER,
+			JSON_INT,
+			JSON_DOUBLE,
 			JSON_BOOL,
 			JSON_NULL,
 			JSON_ARRAY,
@@ -33,7 +34,8 @@ namespace json {
 		JsonElement(std::unique_ptr<JsonObject> object) : type_(Type::JSON_OBJECT) { value(std::move(object)); }
 		JsonElement(std::unique_ptr<JsonArray> array) : type_(Type::JSON_ARRAY) { value(std::move(array)); }
 		JsonElement(std::string str) : type_(Type::JSON_STRING) { value(std::make_unique<std::string>(str)); }
-		JsonElement(float number) : type_(Type::JSON_NUMBER) { value(number); }
+        JsonElement(int int_number) : type_(Type::JSON_INT) { value(int_number); }
+        JsonElement(double double_number) : type_(Type::JSON_DOUBLE) { value(double_number); }
 		JsonElement(bool val) : type_(Type::JSON_BOOL) { value(val); }
 
 		//constructer for =
@@ -42,14 +44,16 @@ namespace json {
 		void value(std::unique_ptr<JsonObject> value_object);
 		void value(std::unique_ptr<JsonArray> value_array);
 		void value(std::unique_ptr<std::string> value_string);
-		void value(double value_number);
+        void value(int value_int);
+		void value(double value_double);
 		void value(bool value_bool);
 
 		//return C-like pointer to ensure unique_ptr's uniqueness
 		JsonObject* asObject();
 		JsonArray* asArray();
 		const std::string& asString();
-		double asNumber();
+        int asInt();
+		double asDouble();
 		bool asBool();
 		std::string toString() const;
 
@@ -68,7 +72,8 @@ namespace json {
 			std::unique_ptr<JsonObject>,         // Represent JSON_OBJECT
 			std::unique_ptr<JsonArray>,          // Represent JSON_ARRAY
 			std::unique_ptr<std::string>,        // Represent JSON_STRING
-			double,                              // Represent JSON_NUMBER
+			int,                                // Represent JSON_INT
+			double,                              // Represent JSON_DOUBLE
 			bool                                 // Represent JSON_BOOL
 		>;
 

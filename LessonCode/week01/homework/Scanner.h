@@ -22,7 +22,8 @@ namespace json
 			KEY_VALUE_SEPARATOR, //:
 
 			VALUE_STRING, // "string"
-			VALUE_NUMBER, // 1234
+			VALUE_INT, // 1234
+			VALUE_DOUBLE, // 1234.5678
 
 			VALUE_TRUE,	 // true,
 			VALUE_FALSE, // false
@@ -56,8 +57,11 @@ namespace json
 			case TokenType::VALUE_STRING:
 				os << "string";
 				break;
-			case TokenType::VALUE_NUMBER:
-				os << "number";
+			case TokenType::VALUE_INT:
+				os << "int";
+				break;
+			case TokenType::VALUE_DOUBLE:
+				os << "double";
 				break;
 			case TokenType::VALUE_TRUE:
 				os << "true";
@@ -81,7 +85,8 @@ namespace json
 		// returns the next token in the json string
 		TokenType nextToken();
 		std::string getValueString();
-		double getValueNumber();
+        int getValueInt();
+		double getValueDouble();
 		void Rollback();
 
 	private:
@@ -90,7 +95,7 @@ namespace json
 		//check if the current value is valid.
 		//for example: true instead if tttrue
 		void ScanValid(const std::string& valid_string);
-		void ScanNumber();
+		bool ScanNumber();
 		void ScanString();
 		//get char at current pos
 		char Peek();
@@ -102,6 +107,7 @@ namespace json
 		size_t current_pos_;
 		size_t prev_pos_;
 		std::string value_string_;
-		double value_number_;
+		double value_double_;
+		int value_int_;
 	};
 }

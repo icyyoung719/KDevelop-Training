@@ -12,7 +12,10 @@ namespace json {
 		case Type::JSON_STRING:
 			value_ = std::make_unique<std::string>();
 			break;
-		case Type::JSON_NUMBER:
+		case Type::JSON_INT:
+    		value_ = 0;
+            break;
+		case Type::JSON_DOUBLE:
 			value_ = 0.0;
 			break;
 		case Type::JSON_BOOL:
@@ -43,9 +46,13 @@ namespace json {
 		type_ = Type::JSON_STRING;
 		value_ = std::move(value_string);
 	}
-	void JsonElement::value(double value_number) {
-		type_ = Type::JSON_NUMBER;
-		value_ = value_number;
+	void JsonElement::value(int value_int) {
+		type_ = Type::JSON_INT;
+		value_ = value_int;
+	}
+	void JsonElement::value(double value_double) {
+		type_ = Type::JSON_DOUBLE;
+		value_ = value_double;
 	}
 	void JsonElement::value(bool value_bool) {
 		type_ = Type::JSON_BOOL;
@@ -67,10 +74,15 @@ namespace json {
 			return *std::get<std::unique_ptr<std::string>>(value_);
 		Error("Type of JsonElement isn't JSON_STRING");
 	}
-	double JsonElement::asNumber() {
-		if (type_ == Type::JSON_NUMBER)
+	int JsonElement::asInt() {
+		if (type_ == Type::JSON_INT)
+			return std::get<int>(value_);
+		Error("Type of JsonElement isn't JSON_INT");
+	}
+	double JsonElement::asDouble() {
+		if (type_ == Type::JSON_DOUBLE)
 			return std::get<double>(value_);
-		Error("Type of JsonElement isn't JSON_NUMBER");
+		Error("Type of JsonElement isn't JSON_DOUBLE");
 	}
 	bool JsonElement::asBool() {
 		if (type_ == Type::JSON_BOOL)
@@ -86,7 +98,10 @@ namespace json {
 		case Type::JSON_STRING:
 			ss << "\"" << *std::get<std::unique_ptr<std::string>>(value_) << "\"";
 			break;
-		case Type::JSON_NUMBER:
+        case Type::JSON_INT:
+			ss << std::get<int>(value_);
+			break;
+		case Type::JSON_DOUBLE:
 			ss << std::get<double>(value_);
 			break;
 		case Type::JSON_BOOL:

@@ -23,8 +23,12 @@ namespace json {
             elem->value(std::make_unique<std::string>(scanner_.getValueString()));
             break;
         }
-        case TokenType::VALUE_NUMBER: {
-            elem->value(scanner_.getValueNumber());
+        case TokenType::VALUE_INT: {
+            elem->value(scanner_.getValueInt());
+            break;
+        }
+        case TokenType::VALUE_DOUBLE: {
+            elem->value(scanner_.getValueDouble());
             break;
         }
         case TokenType::VALUE_TRUE: {
