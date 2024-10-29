@@ -1,6 +1,7 @@
 ﻿#include<iostream>
 #include <regex>
 #include<fstream>
+#include<filesystem>
 #include <memory>
 #include "Scanner.h"
 #include "Parser.h"
@@ -25,7 +26,7 @@ int main() {
     file.close();
 
     Scanner scanner(source);
-    Parser  parser(scanner);
+    Parser  parser(std::move(scanner));
     //now the member scanner_ of parser is identical to scanner
     std::unique_ptr<JsonElement> element;
 
@@ -58,6 +59,19 @@ int main() {
         }
         else if (input_string == "1") {
             std::cout << element->toString() << std::endl;
+        }
+        else if (input_string == "2") {
+            std::regex file_regex_pattern("(.*?\\.json)");
+            std::string output_file_path = std::regex_replace(file_path, file_regex_pattern, "$1_out.json");
+            std::ofstream outputFile(output_file_path);
+            if (!outputFile.is_open()) {
+                std::cerr << "Failed to open file for writing." << std::endl;
+                return 1;
+            }
+
+            std::string output = element->toString();
+            outputFile << output;
+            outputFile.close();
         }
         else {
             // Use std::regex to match the JSON path syntax
