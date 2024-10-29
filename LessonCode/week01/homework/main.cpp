@@ -50,6 +50,8 @@ int main() {
         std::cout << "Enter a command: "<<std::endl;
         std::cout<<R"(Enter "exit" or "q" to exit)"<<std::endl;
         std::cout<<R"(Enter "1" to output the whole Json)"<<std::endl;
+        std::cout<<R"(Enter "2" to output the whole Json to a new file)"<<std::endl;
+        std::cout<<R"(Enter "2" + blankspace + file_path(includeing file_name) to output the whole Json to a new file)"<<std::endl;
         std::cout<<R"(For JsonObjects in the root Json, inputs like ["player"]["name"] or ["scores"])"<<std::endl;
         std::cout<<R"(For JsonArray in the root Json, inputs like ["scores"][0])"<<std::endl<<std::endl;
         std::getline(std::cin, input_string);  // scan the input string 
@@ -60,9 +62,17 @@ int main() {
         else if (input_string == "1") {
             std::cout << element->toString() << std::endl;
         }
-        else if (input_string == "2") {
-            std::regex file_regex_pattern("(.*?\\.json)");
-            std::string output_file_path = std::regex_replace(file_path, file_regex_pattern, "$1_out.json");
+        else if (input_string[0] == '2') {
+            std::string output_file_path;
+            if (input_string.size() != 1) {
+                //if there is a file path
+                output_file_path = input_string.substr(2);
+            }
+            else {
+                //if there is no file path, use the same file name with "_out" appended
+                std::regex file_regex_pattern("(.*?\\.json)");
+                output_file_path = std::regex_replace(file_path, file_regex_pattern, "$1_out.json");
+            }
             std::ofstream outputFile(output_file_path);
             if (!outputFile.is_open()) {
                 std::cerr << "Failed to open file for writing." << std::endl;
@@ -72,6 +82,7 @@ int main() {
             std::string output = element->toString();
             outputFile << output;
             outputFile.close();
+            std::cout << "Json has been output to " << output_file_path << std::endl;
         }
         else {
             // Use std::regex to match the JSON path syntax
