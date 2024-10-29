@@ -27,10 +27,12 @@ namespace json {
 			JSON_ARRAY,
 			JSON_OBJECT
 		};
+		Type getType();
 
 		//constructer
 		JsonElement() : type_(Type::JSON_NULL) {}
 		explicit JsonElement(const Type& type) ;
+		JsonElement(JsonElement&& other) noexcept : type_(other.type_), value_(std::move(other.value_)) { other.type_ = Type::JSON_NULL; }
 		JsonElement(std::unique_ptr<JsonObject> object) : type_(Type::JSON_OBJECT) { value(std::move(object)); }
 		JsonElement(std::unique_ptr<JsonArray> array) : type_(Type::JSON_ARRAY) { value(std::move(array)); }
 		JsonElement(std::string str) : type_(Type::JSON_STRING) { value(std::make_unique<std::string>(str)); }
@@ -39,8 +41,15 @@ namespace json {
 		JsonElement(bool val) : type_(Type::JSON_BOOL) { value(val); }
 
 		//constructer for =
+		JsonElement& operator=(JsonElement&& other) noexcept {
+			if (this != &other) {
+				type_ = other.type_;
+				value_ = std::move(other.value_);
+				other.type_ = Type::JSON_NULL;
+			}
+			return *this;
+		}
 
-		Type getType();
 		void value(std::unique_ptr<JsonObject> value_object);
 		void value(std::unique_ptr<JsonArray> value_array);
 		void value(std::unique_ptr<std::string> value_string);

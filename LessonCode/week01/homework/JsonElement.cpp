@@ -30,6 +30,8 @@ namespace json {
 		}
 	};
 
+
+
 	JsonElement::Type JsonElement::getType() {
 		return type_;
 	}

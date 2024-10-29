@@ -3,6 +3,7 @@
 #include<fstream>
 #include<filesystem>
 #include <memory>
+#include <algorithm> //for std::transform
 #include "Scanner.h"
 #include "Parser.h"
 #include "JsonElement.h"
@@ -53,8 +54,10 @@ int main() {
         std::cout<<R"(Enter "2" to output the whole Json to a new file)"<<std::endl;
         std::cout<<R"(Enter "2" + blankspace + file_path(includeing file_name) to output the whole Json to a new file)"<<std::endl;
         std::cout<<R"(For JsonObjects in the root Json, inputs like ["player"]["name"] or ["scores"])"<<std::endl;
-        std::cout<<R"(For JsonArray in the root Json, inputs like ["scores"][0])"<<std::endl<<std::endl;
+        std::cout<<R"(For JsonArray in the root Json, inputs like ["scores"][0])"<<std::endl;
+        std::cout << R"(To change a value, inputs like ["player"]["name"]=new_value)"<<std::endl<<std::endl;
         std::getline(std::cin, input_string);  // scan the input string 
+
         if (input_string == "exit" || input_string == "q") {
             std::cout<<std::endl<<"Exiting..." << std::endl;
             break;
@@ -70,8 +73,8 @@ int main() {
             }
             else {
                 //if there is no file path, use the same file name with "_out" appended
-                std::regex file_regex_pattern("(.*?\\.json)");
-                output_file_path = std::regex_replace(file_path, file_regex_pattern, "$1_out.json");
+                std::regex file_regex_pattern("(.*[/\\\\])([^/\\\\]+)\\.json");
+                output_file_path = std::regex_replace(file_path, file_regex_pattern, "$1$2_out.json");
             }
             std::ofstream outputFile(output_file_path);
             if (!outputFile.is_open()) {
@@ -85,6 +88,7 @@ int main() {
             std::cout << "Json has been output to " << output_file_path << std::endl;
         }
         else {
+            // TODO :match set mode 
             // Use std::regex to match the JSON path syntax
             std::regex re(R"(\[\"([^\"]+)\"\]|\[(\d+)\])");
             std::smatch match;
@@ -137,7 +141,47 @@ int main() {
 
             // If the path is valid, output the result
             if (validPath) {
-                std::cout << "Value: " << current->toString() << std::endl;
+                bool read_mode = input_string.back() == ']';
+                //write_value is right behind =
+                std::string write_value = input_string.substr(input_string.find('=') + 1);
+                if (read_mode) {
+                    std::cout << "Value: " << current->toString() << std::endl;
+                }
+                else {
+                    std::string write_value = input_string.substr(input_string.find('=') + 1);
+                    //rid the " in write_value
+                    if (write_value.front() == '\"' && write_value.back() == '\"') {
+                        write_value = write_value.substr(1, write_value.size() - 2);
+                    }
+                    JsonElement::Type type = current->getType();
+                    auto isTrue = [](const std::string& s) -> bool {
+                        std::string lowerStr = s;
+                        std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(),
+                            [](unsigned char c) { return std::tolower(c); });
+
+                        return lowerStr == "true";
+                        };
+                    switch (type) {
+                        case JsonElement::Type::JSON_STRING:
+                            current->value(std::make_unique <std::string>(write_value));
+                            break;
+                        case JsonElement::Type::JSON_INT:
+                            current->value(std::stoi(write_value));
+                            break;
+                        case JsonElement::Type::JSON_DOUBLE:
+                            current->value(std::stod(write_value));
+                            break;
+                        case JsonElement::Type::JSON_BOOL:
+                            current->value(isTrue(write_value));
+                            break;
+                        case JsonElement::Type::JSON_NULL:
+                            current->value(std::make_unique < std::string >("null"));
+                            break;
+                        default:
+                            std::cout << "Not suported type." << std::endl;
+                    }
+                    std::cout << "Value has been set to " << write_value << std::endl;
+                }
             }
         }
     }
