@@ -116,6 +116,16 @@ namespace json
 		case 'n':
 			ScanValid(std::string("null"));
 			return TokenType::VALUE_NULL;
+		case '/':
+			if (Peek() == '/') {
+                while (Peek() != '\n' && !IsAtEnd()) {
+					Advance();
+        		}
+				return nextToken();
+			}
+			else {
+				Error("Invalid character: " + c);
+			}
 		case ' ':
 		case '\t':
 		case '\n':

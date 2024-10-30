@@ -3,7 +3,6 @@
 #include<fstream>
 #include<filesystem>
 #include <memory>
-#include <algorithm> //for std::transform
 #include "Scanner.h"
 #include "Parser.h"
 #include "JsonElement.h"

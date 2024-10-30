@@ -20,6 +20,7 @@ namespace json
 
 			VALUE_SEPARATOR,	 // ,
 			KEY_VALUE_SEPARATOR, //:
+			COMMENT,			// //
 
 			VALUE_STRING, // "string"
 			VALUE_INT, // 1234
