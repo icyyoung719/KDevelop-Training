@@ -1,13 +1,13 @@
-#include "BoyerMoore.h"
+ï»¿#include "BoyerMoore.h"
 
-// ¹¹Ôìº¯Êı³õÊ¼»¯Ä£Ê½
+// æ„é€ å‡½æ•°åˆå§‹åŒ–æ¨¡å¼
 BoyerMoore::BoyerMoore(const std::string& pattern)
     : pattern(pattern) {
     preprocessBadCharTable();
     preprocessGoodSuffixTable();
 }
 
-// Ô¤´¦Àí»µ×Ö·û¹æÔò
+// é¢„å¤„ç†åå­—ç¬¦è§„åˆ™
 void BoyerMoore::preprocessBadCharTable() {
     int m = pattern.length();
     for (int i = 0; i < 256; ++i) {
@@ -18,7 +18,7 @@ void BoyerMoore::preprocessBadCharTable() {
     }
 }
 
-// Ô¤´¦ÀíºÃºó×º¹æÔò
+// é¢„å¤„ç†å¥½åç¼€è§„åˆ™
 void BoyerMoore::preprocessGoodSuffixTable() {
     int m = pattern.length();
     goodSuffixTable.resize(m + 1, -1);
@@ -26,7 +26,7 @@ void BoyerMoore::preprocessGoodSuffixTable() {
     std::vector<int> suffix(m + 1, -1);
     std::vector<bool> prefix(m + 1, false);
 
-    // ¼ÆËãºó×ºÊı×é
+    // è®¡ç®—åç¼€æ•°ç»„
     for (int i = 0; i < m; ++i) {
         int j = i;
         while (j >= 0 && pattern.substr(i, m - i) == pattern.substr(j, m - i)) {
@@ -35,7 +35,7 @@ void BoyerMoore::preprocessGoodSuffixTable() {
         }
     }
 
-    // ¼ÆËãÇ°×ºÊı×é
+    // è®¡ç®—å‰ç¼€æ•°ç»„
     for (int i = 0; i < m; ++i) {
         if (suffix[i] != -1) {
             for (int k = 0; k < m - i; ++k) {
@@ -46,7 +46,7 @@ void BoyerMoore::preprocessGoodSuffixTable() {
         }
     }
 
-    // ¼ÆËãºÃºó×º±í
+    // è®¡ç®—å¥½åç¼€è¡¨
     for (int i = 0; i < m; ++i) {
         if (suffix[i] != -1) {
             goodSuffixTable[i] = m - 1 - suffix[i];
@@ -62,13 +62,13 @@ void BoyerMoore::preprocessGoodSuffixTable() {
     }
 }
 
-// ÔÚ¸ø¶¨ÎÄ±¾ÖĞ²éÕÒÄ£Ê½£¬·µ»ØÆ¥ÅäÎ»ÖÃµÄË÷ÒıÁĞ±í
+// åœ¨ç»™å®šæ–‡æœ¬ä¸­æŸ¥æ‰¾æ¨¡å¼ï¼Œè¿”å›åŒ¹é…ä½ç½®çš„ç´¢å¼•åˆ—è¡¨
 std::vector<int> BoyerMoore::search(const std::string& text) {
     int n = text.length();
     int m = pattern.length();
     std::vector<int> matches;
 
-    int s = 0;  // sÊÇÄ£Ê½ÔÚÎÄ±¾ÖĞµÄÆğÊ¼Î»ÖÃ
+    int s = 0;  // sæ˜¯æ¨¡å¼åœ¨æ–‡æœ¬ä¸­çš„èµ·å§‹ä½ç½®
     while (s <= n - m) {
         int j = m - 1;
 

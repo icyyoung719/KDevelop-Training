@@ -1,30 +1,26 @@
-﻿#include <iostream>
-#include <string>
-#include <vector>
-#include "BoyerMoore.h"
+﻿#include<iostream>
+#include<fcntl.h>
+#include "TestAhoCorasick.h"
+#include "TestBoyerMoore.h"
+//#include<sys/mman.h>
 
 int main() {
-    // 定义要搜索的文本和模式
-    std::string text = "This is a simple example for the Boyer-Moore string search algorithm. "
-        "This example is to test the Boyer-Moore algorithm for pattern matching.";
-    std::string pattern = "Boyer-Moore";
-
-    // 初始化BoyerMoore对象
-    BoyerMoore bm(pattern);
-
-    // 使用Boyer-Moore算法在文本中查找模式
-    std::vector<int> positions = bm.search(text);
-
-    // 输出匹配位置
-    if (positions.empty()) {
-        std::cout << "Pattern not found in the text." << std::endl;
+	//test AhoCorasick Algorithm
+	int result = test_AhoCorasick();
+    if (result == 0) {
+        std::cout << "AhoCorasick Test Passed!" << std::endl;
     }
     else {
-        std::cout << "Pattern found at positions: ";
-        for (int pos : positions) {
-            std::cout << pos << " ";
-        }
-        std::cout << std::endl;
+        std::cout << "AhoCorasick Test Failed!" << std::endl;
+    }
+
+    //test BoyerMoore Algorithm
+    result = test_BoyerMoore();
+    if (result == 0) {
+        std::cout << "BoyerMoore Test Passed!" << std::endl;
+    }
+    else {
+         std::cout << "BoyerMoore Test Failed!" << std::endl;
     }
 
     return 0;
