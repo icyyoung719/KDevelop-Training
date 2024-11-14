@@ -11,6 +11,7 @@ public:
     explicit BoyerMoore(const std::string& pattern);
 
     // 在给定文本中查找模式，返回匹配位置的索引列表
+    // we can pass a string reference and it won't be copied, for it's read only
     std::vector<int> search(const std::string& text);
 
 private:
