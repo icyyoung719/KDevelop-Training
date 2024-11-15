@@ -25,7 +25,19 @@
 //int main() {
 //    // Path of the input file
 //    std::string path = R"(D:\WPS_course\性能大作业-文件以及输入输出示例\enwiki-20231120-abstract1.xml)";
+//    std::string pattern_path = R"(D:\WPS_course\性能大作业-文件以及输入输出示例\keyword.txt)";
 //    std::string root_out_path = R"(D:\WPS_course\性能大作业-文件以及输入输出示例\)";
+//
+//    std::vector<std::string> keywords;
+//    std::ifstream pattern_file(pattern_path);
+//    if (!pattern_file.is_open()) {
+//        std::cerr << "Failed to open pattern file: " << pattern_path << std::endl;
+//        return 1;
+//    }
+//    std::string line;
+//    while (std::getline(pattern_file, line)) {
+//        keywords.push_back(line);
+//    }
 //
 //    // Open the input file in binary mode to handle large files
 //    std::ifstream file(path, std::ios::binary | std::ios::ate);
@@ -40,13 +52,11 @@
 //    file.read(&content[0], file_size);
 //    file.close();
 //
-//    // Create an Aho-Corasick instance
 //    AhoCorasick ac;
 //
-//    // Insert multiple patterns
-//    //ac.insertPattern(R"(<sublink linktype="nav"><anchor>)");
-//    ac.insertPattern("Panda");
-//    ac.insertPattern("panda");
+//    for (const auto& keyword : keywords) {
+//        ac.insertPattern(keyword);
+//    }
 //
 //    // Build the automaton
 //    ac.buildAutomaton();
@@ -57,15 +67,19 @@
 //    // Write the results to a file
 //    //write_results(matches, root_out_path + "results.txt");
 //
-//    // Optionally, print the results to the console
-//    //std::cout << "Found " << matches.size() << " patterns in the text:\n";
+//    std::ofstream times_file(root_out_path + "times.txt");
+//    if (!times_file.is_open()) {
+//        throw std::runtime_error("Could not open input file");
+//    }
+//
 //    for (const auto& [pattern, positions] : matches) {
 //        std::cout << "Pattern '" << pattern << "' found at positions: ";
 //        std::cout << "Nums " << positions.size();
-//        //for (int pos : positions) {
-//        //    std::cout << pos << " ";
-//        //}
 //        std::cout << "\n";
+//
+//        times_file << "Pattern '" << pattern << "' found at positions: ";
+//        times_file << "Nums " << positions.size();
+//        times_file << "\n";
 //    }
 //
 //    return 0;
