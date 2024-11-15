@@ -38,3 +38,6 @@ Boyer-Moore算法：如果关键词较少且文件较大，可以使用Boyer-Moo
 - 由于使用字符串树，因此无需创建子线程B，只需要file_size / 50mb个子线程
 - 什么时候保存：？
 
+### 其他
+- 由于  <sublink linktype="nav"><anchor>_out.txt  等无法作为文件名，因此使用sanitize_filename处理文件名，替换不合格的字符
+

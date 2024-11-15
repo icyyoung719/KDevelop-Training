@@ -1,4 +1,7 @@
 ﻿#include "BoyerMoore.h"
+#include <iostream>
+#include <algorithm>
+#include <cstring>
 
 // 构造函数初始化模式
 BoyerMoore::BoyerMoore(const std::string& pattern)
@@ -10,11 +13,9 @@ BoyerMoore::BoyerMoore(const std::string& pattern)
 // 预处理坏字符规则
 void BoyerMoore::preprocessBadCharTable() {
     int m = pattern.length();
-    for (int i = 0; i < 256; ++i) {
-        badCharTable[i] = -1;
-    }
     for (int i = 0; i < m; ++i) {
-        badCharTable[pattern[i]] = i;
+        std::string char_str(1, pattern[i]);
+        badCharTable[char_str] = i;
     }
 }
 
@@ -62,6 +63,11 @@ void BoyerMoore::preprocessGoodSuffixTable() {
     }
 }
 
+// 辅助函数：检查字符是否为UTF-8的开始字节
+bool BoyerMoore::isUTF8StartByte(unsigned char byte) {
+    return (byte & 0x80) == 0x00 || (byte & 0xE0) == 0xC0 || (byte & 0xF0) == 0xE0 || (byte & 0xF8) == 0xF0;
+}
+
 // 在给定文本中查找模式，返回匹配位置的索引列表
 std::vector<int> BoyerMoore::search(const std::string& text) {
     int n = text.length();
@@ -72,17 +78,25 @@ std::vector<int> BoyerMoore::search(const std::string& text) {
     while (s <= n - m) {
         int j = m - 1;
 
+        // 从后向前进行字符比较
         while (j >= 0 && pattern[j] == text[s + j]) {
             j--;
         }
 
         if (j < 0) {
-            matches.push_back(s);
-            s += (s + m < n) ? m - goodSuffixTable[0] : 1;
+            matches.push_back(s);  // 匹配成功
+            s += (s + m < n) ? m - goodSuffixTable[0] : 1; // 按照好后缀规则位移
         }
         else {
-            int badCharShift = j - badCharTable[text[s + j]];
+            // 坏字符规则
+            std::string badChar(1, text[s + j]);
+            int badCharShift = j - badCharTable[badChar];
+            if (badCharShift < 0) badCharShift = 1; // 确保至少向右移动1位
+
+            // 好后缀规则
             int goodSuffixShift = (j < m - 1) ? m - 1 - goodSuffixTable[j + 1] : 1;
+
+            // 使用坏字符和好后缀规则的最大位移
             s += std::max(badCharShift, goodSuffixShift);
         }
     }

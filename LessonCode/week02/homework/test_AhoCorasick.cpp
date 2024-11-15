@@ -1,30 +1,72 @@
-﻿#include <iostream>
-#include "AhoCorasick.h"
-
-int test_AhoCorasick() {
-    AhoCorasick ac;
-
-    // 插入多个模式
-    ac.insertPattern("he");
-    ac.insertPattern("she");
-    ac.insertPattern("his");
-    ac.insertPattern("hers");
-
-    // 构建自动机
-    ac.buildAutomaton();
-
-    // 搜索文本中的所有模式
-    std::string text = "ushers";
-    auto matches = ac.search(text);
-
-    // 输出匹配结果
-    for (const auto& [pattern, positions] : matches) {
-        std::cout << "Pattern '" << pattern << "' found at positions: ";
-        for (int pos : positions) {
-            std::cout << pos << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    return 0;
-}
+﻿//#include <iostream>
+//#include <fstream>
+//#include <vector>
+//#include <unordered_map>
+//#include "AhoCorasick.h"
+//
+//// Write results to a file
+//void write_results(const std::unordered_map<std::string, std::vector<int>>& matches, const std::string& out_path) {
+//    std::ofstream out_file(out_path);
+//    if (!out_file.is_open()) {
+//        throw std::runtime_error("Could not open output file");
+//    }
+//
+//    for (const auto& [pattern, positions] : matches) {
+//        out_file << "Pattern '" << pattern << "' found at positions: ";
+//        for (int pos : positions) {
+//            out_file << pos << " ";
+//        }
+//        out_file << "\n";
+//    }
+//
+//    out_file.close();
+//}
+//
+//int main() {
+//    // Path of the input file
+//    std::string path = R"(D:\WPS_course\性能大作业-文件以及输入输出示例\enwiki-20231120-abstract1.xml)";
+//    std::string root_out_path = R"(D:\WPS_course\性能大作业-文件以及输入输出示例\)";
+//
+//    // Open the input file in binary mode to handle large files
+//    std::ifstream file(path, std::ios::binary | std::ios::ate);
+//    if (!file.is_open()) {
+//        throw std::runtime_error("Could not open input file");
+//    }
+//
+//    // Get file size and read the entire file into memory
+//    std::streamsize file_size = file.tellg();
+//    file.seekg(0, std::ios::beg);
+//    std::string content(file_size, '\0');
+//    file.read(&content[0], file_size);
+//    file.close();
+//
+//    // Create an Aho-Corasick instance
+//    AhoCorasick ac;
+//
+//    // Insert multiple patterns
+//    //ac.insertPattern(R"(<sublink linktype="nav"><anchor>)");
+//    ac.insertPattern("Panda");
+//    ac.insertPattern("panda");
+//
+//    // Build the automaton
+//    ac.buildAutomaton();
+//
+//    // Search the text for all patterns
+//    auto matches = ac.search(content);
+//
+//    // Write the results to a file
+//    //write_results(matches, root_out_path + "results.txt");
+//
+//    // Optionally, print the results to the console
+//    //std::cout << "Found " << matches.size() << " patterns in the text:\n";
+//    for (const auto& [pattern, positions] : matches) {
+//        std::cout << "Pattern '" << pattern << "' found at positions: ";
+//        std::cout << "Nums " << positions.size();
+//        //for (int pos : positions) {
+//        //    std::cout << pos << " ";
+//        //}
+//        std::cout << "\n";
+//    }
+//
+//    return 0;
+//}
