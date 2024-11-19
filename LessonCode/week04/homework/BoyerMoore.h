@@ -15,7 +15,7 @@ public:
 
 private:
     std::string pattern;
-    std::unordered_map<char, int> badCharTable; // 存储坏字符规则
+    std::array<int, 256> badCharTable; // 存储坏字符规则
     std::vector<int> goodSuffixTable;
 
     // 预处理坏字符规则

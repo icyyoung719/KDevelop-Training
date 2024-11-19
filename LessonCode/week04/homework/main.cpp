@@ -22,7 +22,7 @@ int main() {
         keywords.push_back(line);
     }
 
-    std::string keyword = keywords[1];
+    std::string keyword = keywords[4];
     // Use test_BoyerMoore to search a single keyword
     int result = test_BoyerMoore(file_path, keyword);
     std::cout << keyword << ": " << result << std::endl;

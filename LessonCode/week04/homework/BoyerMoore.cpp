@@ -12,9 +12,10 @@ BoyerMoore::BoyerMoore(const std::string& pattern)
 
 // 预处理坏字符规则
 void BoyerMoore::preprocessBadCharTable() {
+    badCharTable.fill(0);
     int m = pattern.length();
     for (int i = 0; i < m; ++i) {
-        badCharTable[pattern[i]] = i;  // 存储每个字符最后出现的位置
+        badCharTable[pattern[i] + 128] = i;  // 存储每个字符最后出现的位置
     }
 }
 
@@ -85,7 +86,7 @@ std::vector<int> BoyerMoore::search(const std::string& text) {
         else {
             // 坏字符规则
             char badChar = text[s + j];
-            int badCharShift = j - badCharTable[badChar];
+            int badCharShift = j - badCharTable[badChar + 128];
             if (badCharShift <= 0) badCharShift = 1; // 确保至少向右移动1位
 
             // 好后缀规则
@@ -95,9 +96,9 @@ std::vector<int> BoyerMoore::search(const std::string& text) {
             s += std::max(badCharShift, goodSuffixShift);
         }
 
-        if ((s >= 487030320 && s <= 487030343) || (s >= 817889220 && s <= 817889266) || s == 52019) {
-            std::cout << s;
-        }
+        //if ((s >= 1000 && s <= 487030343) || (s >= 817889220 && s <= 817889266) || s == 52019) {
+        //    std::cout << s;
+        //}
     }
 
     return matches;
