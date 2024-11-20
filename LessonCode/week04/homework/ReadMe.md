@@ -33,6 +33,15 @@ Boyer-Moore算法：如果关键词较少且文件较大，可以使用Boyer-Moo
 - 每当总vector<int>有大于10 000个元素时，和最后完毕时，将其写入到相应string_out.txt中，该字符串的nums+10 000或相应的size
 - 最后，在相应times.txt的写入相应字符串及其匹配成功的nums
 
+- 每一个pattern设置一个线程A，pattern再根据文件的大小，每200MB设置相应数目的子线程B
+- 每一个线程B运行后都会返回一个vector<int>，存放字符串出现的位置，他的size即为当前块中字符串出现数目
+- 具有相同待匹配字符串的线程B的vector<int>最后合并到改字符串的总vector<int>中
+- 总vector得到后即刻释放内存，不保留，但保留其size作为匹配次数
+- 使用线程池，限制总线程数目
+- 每个块预留一段额外的重叠区域，大小为 pattern.length() - 1，确保边界的完整性。
+- 最后，在相应times.txt的写入相应字符串及其匹配成功的nums，一次性收集所有匹配次数后再统一写入。
+
+
 ### AC算法
 - 类似BM算法
 - 由于使用字符串树，因此无需创建子线程B，只需要file_size / 50mb个子线程
@@ -41,3 +50,18 @@ Boyer-Moore算法：如果关键词较少且文件较大，可以使用Boyer-Moo
 ### 其他
 - 由于  <sublink linktype="nav"><anchor>_out.txt  等无法作为文件名，因此使用sanitize_filename处理文件名，替换不合格的字符
 
+
+### 多线程思路
+#### BM
+- 待搜索的文件file由main全部读入内存，并对所有线程读共享
+- main分配好线程A的线程池，将单个的pattern传递给test_BoyerMoore
+- test_BoyerMoore（test_BM）维护一个static的线程B的线程池，由所有pattern共享，放置线程过多
+- test_BM接受到pattern后，先init一个BoyerMoore对象，再按照预期大小划分文件，加入线程池
+- test_BM等待自己pattern的所有B子线程结束(join)，返回其总vector的size
+- main等待所有A线程结束，得到所有待搜索结果的size，统一写入times.txt中
+- test_BM封装成一个对象
+
+#### AC
+- 天然多线程，不是特别依赖
+- 关键在于将文件更加细致地划分，但是不好处理文件的边界问题
+- 不需要再次封装一个对象，没必要
