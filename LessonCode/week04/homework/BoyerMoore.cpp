@@ -95,10 +95,6 @@ std::vector<int> BoyerMoore::search(const std::string& text) {
             // 使用坏字符和好后缀规则的最大位移
             s += std::max(badCharShift, goodSuffixShift);
         }
-
-        //if ((s >= 1000 && s <= 487030343) || (s >= 817889220 && s <= 817889266) || s == 52019) {
-        //    std::cout << s;
-        //}
     }
 
     return matches;

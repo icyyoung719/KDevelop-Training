@@ -38,6 +38,9 @@ void BoyerMooreSearch::setKeywords(const std::vector<std::string>& keywords) {
 void BoyerMooreSearch::searchAllKeywords() {
     for (size_t i = 0; i < keywords.size(); i++) {
         {
+            if (keywords[i].empty()) {
+                continue;
+            }
             std::lock_guard<std::mutex> lock(queue_mutex);
             task_queue.emplace([this, i]() {
                 int count = searchWord(keywords[i]);
