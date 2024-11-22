@@ -1,8 +1,26 @@
 ﻿#include "AhoCorasick.h"
+#include <fstream>
 #include <queue>
+#include <stdexcept>
 
-AhoCorasick::AhoCorasick() {
+std::string AhoCorasick::file_content = ""; // 静态成员初始化
+
+// 加载文件内容到静态成员
+void AhoCorasick::loadFile(const std::string& filePath) {
+    std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open input file: " + filePath);
+    }
+    std::streamsize file_size = file.tellg();
+    file.seekg(0, std::ios::beg);
+    file_content.resize(file_size);
+    file.read(&file_content[0], file_size);
+    file.close();
+}
+
+AhoCorasick::AhoCorasick(const std::string& file_path) {
     root = new TrieNode();
+    AhoCorasick::loadFile(file_path);
 }
 
 // 插入模式
@@ -53,13 +71,17 @@ void AhoCorasick::buildAutomaton() {
     }
 }
 
-// 搜索文本中的所有模式并返回每个模式的匹配位置
-std::unordered_map<std::string, std::vector<int>> AhoCorasick::search(const std::string& text) {
-    std::unordered_map<std::string, std::vector<int>> result;
+// 搜索静态文件内容中的所有模式
+void AhoCorasick::search() {
+    if (file_content.empty()) {
+        throw std::runtime_error("No file content loaded for searching.");
+    }
+
+    search_results.clear(); // 清空之前的搜索结果
     TrieNode* node = root;
 
-    for (int i = 0; i < text.size(); ++i) {
-        char ch = text[i];
+    for (int i = 0; i < file_content.size(); ++i) {
+        char ch = file_content[i];
 
         // 根据失败指针找到匹配节点
         while (node && !node->children.count(ch)) {
@@ -69,11 +91,14 @@ std::unordered_map<std::string, std::vector<int>> AhoCorasick::search(const std:
 
         // 处理所有的输出
         for (const std::string& pattern : node->output) {
-            result[pattern].push_back(i - pattern.size() + 1);
+            search_results[pattern].push_back(i - pattern.size() + 1);
         }
     }
+}
 
-    return result;
+// 获取搜索结果
+const std::unordered_map<std::string, std::vector<int>>& AhoCorasick::getSearchResults() const {
+    return search_results;
 }
 
 // 删除Trie树，防止内存泄漏
@@ -89,4 +114,5 @@ void AhoCorasick::deleteTrie(TrieNode* node) {
 // 析构函数调用deleteTrie释放内存
 AhoCorasick::~AhoCorasick() {
     deleteTrie(root);
+    file_content.clear();
 }
