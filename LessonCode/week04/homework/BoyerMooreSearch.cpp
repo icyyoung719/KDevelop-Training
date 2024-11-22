@@ -5,6 +5,7 @@
 
 // 静态成员初始化
 std::string BoyerMooreSearch::fileContent;
+std::chrono::steady_clock::time_point BoyerMooreSearch::begin_time = std::chrono::high_resolution_clock::now();
 std::vector<std::thread> BoyerMooreSearch::threadPool;
 std::queue<std::function<void()>> BoyerMooreSearch::taskQueue;
 std::atomic<size_t> BoyerMooreSearch::pendingTasks{ 0 };
@@ -14,7 +15,6 @@ bool BoyerMooreSearch::stopThreads = false;
 
 BoyerMooreSearch::BoyerMooreSearch(const std::string& filePath)
     : filePath(filePath) {
-    // 静态文件内容初始化（仅初始化一次）
     if (fileContent.empty()) {
         std::ifstream file(filePath, std::ios::binary | std::ios::ate);
         if (!file.is_open()) {
@@ -24,13 +24,13 @@ BoyerMooreSearch::BoyerMooreSearch(const std::string& filePath)
         file.seekg(0, std::ios::beg);
         fileContent.resize(fileSize);
         file.read(&fileContent[0], fileSize);
-        file.close();
     }
 }
 
 void BoyerMooreSearch::setKeywords(const std::vector<std::string>& keywords) {
     this->keywords = keywords;
     keywordMatchCounts.resize(keywords.size());
+    keywordSearchTime.resize(keywords.size());
 }
 
 void BoyerMooreSearch::searchAllKeywords() {
@@ -40,14 +40,15 @@ void BoyerMooreSearch::searchAllKeywords() {
             taskQueue.emplace([this, i]() {
                 int count = searchKeyword(keywords[i]);
                 keywordMatchCounts[i] = count;
+                keywordSearchTime[i] = std::chrono::high_resolution_clock::now();
 
-                // 任务完成，减少计数器
+                // 减少计数器
                 {
                     std::lock_guard<std::mutex> lock(queueMutex);
                     pendingTasks--;
                 }
                 queueCondition.notify_all();
-            });
+                });
             pendingTasks++; // 增加计数器
         }
         queueCondition.notify_one();
@@ -61,10 +62,23 @@ void BoyerMooreSearch::searchAllKeywords() {
 }
 
 std::vector<int> BoyerMooreSearch::getKeywordMatchCounts() {
-    //for (size_t i = 0; i < keywords.size(); i++) {
-    //    std::cout << keywords[i] << ': ' << keywordMatchCounts[i] << std::endl;
-    //}
     return keywordMatchCounts;
+}
+
+std::vector<std::chrono::steady_clock::time_point> BoyerMooreSearch::getKewwordSearchTime() {
+    return keywordSearchTime;
+}
+
+void BoyerMooreSearch::fileOutputKeywordMatchCounts(std::string outpath) {
+    std::ofstream output_file(outpath);
+    if (!output_file.is_open()) {
+        throw std::runtime_error("Could not open output file");
+    }
+    for (int i = 0; i < keywords.size(); i++) {
+        output_file << i + 1 << ". " << keywords[i] 
+            << ": count:" << keywordMatchCounts[i] 
+            << "  time:" << std::chrono::duration<double>(keywordSearchTime[i] - begin_time).count() << " seconds.\n";
+    }
 }
 
 int BoyerMooreSearch::searchKeyword(const std::string& keyword) {
@@ -99,9 +113,7 @@ void BoyerMooreSearch::workerThread() {
         std::function<void()> task;
         {
             std::unique_lock<std::mutex> lock(queueMutex);
-            queueCondition.wait(lock, [] {
-                return stopThreads || !taskQueue.empty();
-                });
+            queueCondition.wait(lock, [] { return stopThreads || !taskQueue.empty(); });
             if (stopThreads && taskQueue.empty()) {
                 return;
             }
@@ -109,6 +121,5 @@ void BoyerMooreSearch::workerThread() {
             taskQueue.pop();
         }
         task();
-        queueCondition.notify_all();
     }
 }
