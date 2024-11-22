@@ -1,7 +1,8 @@
 ﻿#include "util.h"
 #include <iostream>
 
-void set_config(std::string& file_path, std::string& keywords_path, std::string& output_file_path, bool& search_algorithm) {
+bool set_config(std::string& file_path, std::string& keywords_path, std::string& output_file_path, bool& search_algorithm) {
+    bool is_default_algorithm = true;
     std::string user_choice;
     std::string user_input; //for path and mode
     while (true) {
@@ -10,7 +11,7 @@ void set_config(std::string& file_path, std::string& keywords_path, std::string&
         std::cout << "1: Set keyword.txt file path\n";
         std::cout << "2: Set document file path\n";
         std::cout << "3: Set output file path\n";
-        std::cout << "4: Set search algorithm and search pattern, use BoyerMoore algorithm as default\n";
+        std::cout << "4: Set search algorithm and search pattern, choose automatically in default\n";
         std::cout << "q: Quit and begin searching\n";
         std::cin >> user_choice;
 
@@ -50,18 +51,21 @@ void set_config(std::string& file_path, std::string& keywords_path, std::string&
         else if (user_choice == "4") {
             std::cout << "AhoCorasick algotithm: Faster in searching all the keywords, but can't give single keyword search time" << std::endl;
             std::cout << "BoyerMoore algorithm: Faster single keyword search, but slower in all keywords search" << std::endl;
-            std::cout << "Default as BoyerMoore" << std::endl;
+            std::cout << "Default will choose automatically" << std::endl;
             std::cout << "Please input your option, 1:AhoCorasick ,2:BoyerMoore" << std::endl;
             std::cin >> user_input;
             if (user_input == "1") {//AC
                 search_algorithm = true;
+                is_default_algorithm = false;
                 std::cout << "Search algorithm set to AhoCorasick" << std::endl;
             }
             else if (user_input == "2") {//BM
                 search_algorithm = false;
+                is_default_algorithm = false;
                 std::cout << "Search algorithm set to BoyerMoore" << std::endl;
             }
             else {
+                is_default_algorithm = true;
                 std::cout << "Invalid input" << std::endl;
             }
         }

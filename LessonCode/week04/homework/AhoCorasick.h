@@ -12,7 +12,10 @@ public:
     void insertPattern(const std::string& pattern);   // 插入模式
     void buildAutomaton();                            // 构建自动机
     void search();                                    // 搜索静态文件内容，结果存储到内部成员变量
+    void searchWithoutPositions();                    // 不保留位置信息的搜索
     const std::unordered_map<std::string, std::vector<int>>& getSearchResults() const; // 获取搜索结果
+    const std::unordered_map<std::string, int>& getTimesResults() const; // 获取搜索次数
+    void generateTimesResult();                         // 生成搜索次数结果
     ~AhoCorasick();
 
 private:

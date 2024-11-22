@@ -78,6 +78,7 @@ void AhoCorasick::search() {
     }
 
     search_results.clear(); // 清空之前的搜索结果
+    times_results.clear();
     TrieNode* node = root;
 
     for (int i = 0; i < file_content.size(); ++i) {
@@ -95,10 +96,37 @@ void AhoCorasick::search() {
         }
     }
 }
+void AhoCorasick::searchWithoutPositions() {
+    if (file_content.empty()) {
+        throw std::runtime_error("No file content loaded for searching.");
+    }
+
+    search_results.clear(); // 清空之前的搜索结果
+    times_results.clear();
+    TrieNode* node = root;
+
+    for (int i = 0; i < file_content.size(); ++i) {
+        char ch = file_content[i];
+
+        // 根据失败指针找到匹配节点
+        while (node && !node->children.count(ch)) {
+            node = node->failureLink;
+        }
+        node = node ? node->children[ch] : root;
+
+        // 处理所有的输出
+        for (const std::string& pattern : node->output) {
+            times_results[pattern] += 1;
+        }
+    }
+}
 
 // 获取搜索结果
 const std::unordered_map<std::string, std::vector<int>>& AhoCorasick::getSearchResults() const {
     return search_results;
+}
+const std::unordered_map<std::string, int>& AhoCorasick::getTimesResults() const {
+    return times_results;
 }
 
 // 删除Trie树，防止内存泄漏
@@ -108,6 +136,12 @@ void AhoCorasick::deleteTrie(TrieNode* node) {
             deleteTrie(child);
         }
         delete node;
+    }
+}
+
+void AhoCorasick::generateTimesResult() {
+    for (auto& [pattern, positions] : search_results) {
+        times_results[pattern] = positions.size();
     }
 }
 
