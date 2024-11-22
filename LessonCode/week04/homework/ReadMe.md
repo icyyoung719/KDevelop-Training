@@ -1,67 +1,105 @@
-总体思路：
-1.分段读取文件，正好每段都可以作为一个线程
-2.将每一个搜索的字符串作为每个文件段的子进程
-3.每个字符串，都有一个文件，作为位置的输出，每个字符串分析完成后，可以直接输出，然后释放内存
-4.每个文件段完成对所有的字符串的搜索后，可以释放相应的内存
-5.对每个字符串创建一个.txt文件，用于存放出现的位置，在每个文件段进程结束后更新，写入后清空相应的vector
-6.字符串有Panda等纯字符，还有<sublink linktype="nav"><anchor>这种xml元素
- 
+## 总体说明
+支持两种高效的字符串匹配算法：Boyer-Moore (BM) 和 Aho-Corasick (AC)。
+项目的主要功能包括：
 
-1. 文件读取与内存映射
-使用内存映射文件（mmap）实现高效读取。这样可以直接将1GB的XML文件映射到内存，不用一次性加载到物理内存中，而是按需分页访问，避免高内存占用。
-通过mmap函数将文件映射到内存，可以通过直接操作指针来访问文件内容。
+- 从指定的关键词文件加载关键词。
+- 在指定的文本文件中搜索每个关键词的出现次数。
+- 输出搜索结果到控制台或文件。
+- 提供详细的时间统计，便于性能分析。
+- 用户可以通过配置文件或运行时选择使用哪种搜索算法，以及指定输入和输出路径。
+- 程序默认会根据关键字数目进行算法的抉择，关键词数较少时，使用 BoyerMoore 算法。；较多时，使用AhoCorasick算法
+- 没有采用内存映射文件，因为文件1G，可以直接在载入内存
 
-4. 快速字符串匹配算法
-Aho-Corasick算法：对于多个关键词的搜索，构建关键词的字典树（Trie），并使用Aho-Corasick算法，可以在单次扫描过程中匹配所有关键词。
-Boyer-Moore算法：如果关键词较少且文件较大，可以使用Boyer-Moore算法。它的特性适合在大文本中查找单个长关键词。
-使用这些高效算法加速匹配操作，并在每个线程中独立运行。
+## 文件说明
+- AhoCorasick.cpp / AhoCorasick.h
 
-## 设计思路
-- 对于xml元素，可以选择使用Aho-Corasick共同搜索
-- 可以使用std::string::find进行对比分析
+实现 Aho-Corasick 算法。支持构建多模式自动机并高效搜索所有关键词。
 
+- BoyerMoore.cpp / BoyerMoore.h
 
-## 高级功能
-- 存放字符串出现位置的.txt文件写入时，线程要确保按序，可以保证按序写入
-- 对于有不同特征的输入字符串，根据其长度、是否为<sublink linktype="nav"><anchor>式的xml元素 等方式，选择合适的搜索方式
+实现 Boyer-Moore 算法的基本功能，包括跳跃规则。
 
+- BoyerMooreSearch.cpp / BoyerMooreSearch.h
 
-### BM算法测试思路
-- 每次读取文件的50mb作为一块作为一个线程A，每一块再根据 字符串数目，设置相应数目的子线程B
-- 每一个线程B运行后都会返回一个vector<int>，存放字符串出现的位置，他的size即为当前块中字符串出现数目
-- 具有相同待匹配字符串的线程B的vector<int>最后合并到改字符串的总vector<int>中
-- 每当总vector<int>有大于10 000个元素时，和最后完毕时，将其写入到相应string_out.txt中，该字符串的nums+10 000或相应的size
-- 最后，在相应times.txt的写入相应字符串及其匹配成功的nums
+在 Boyer-Moore 算法的基础上扩展，支持多线程搜索，提升大规模数据处理性能。
 
-- 每一个pattern设置一个线程A，pattern再根据文件的大小，每200MB设置相应数目的子线程B
-- 每一个线程B运行后都会返回一个vector<int>，存放字符串出现的位置，他的size即为当前块中字符串出现数目
-- 具有相同待匹配字符串的线程B的vector<int>最后合并到改字符串的总vector<int>中
-- 总vector得到后即刻释放内存，不保留，但保留其size作为匹配次数
-- 使用线程池，限制总线程数目
-- 每个块预留一段额外的重叠区域，大小为 pattern.length() - 1，确保边界的完整性。
-- 最后，在相应times.txt的写入相应字符串及其匹配成功的nums，一次性收集所有匹配次数后再统一写入。
+- util.cpp / util.h
 
+提供项目中的实用工具函数，如文件读取、关键词加载、配置初始化等。
 
-### AC算法
-- 类似BM算法
-- 由于使用字符串树，因此无需创建子线程B，只需要file_size / 50mb个子线程
-- 什么时候保存：？
+- main.cpp
 
-### 其他
-- 由于  <sublink linktype="nav"><anchor>_out.txt  等无法作为文件名，因此使用sanitize_filename处理文件名，替换不合格的字符
+主程序入口，负责初始化搜索器、运行搜索任务，并处理用户交互。
 
+- CMakeLists.txt
 
-### 多线程思路
-#### BM
-- 待搜索的文件file由main全部读入内存，并对所有线程读共享
-- main分配好线程A的线程池，将单个的pattern传递给test_BoyerMoore
-- test_BoyerMoore（test_BM）维护一个static的线程B的线程池，由所有pattern共享，放置线程过多
-- test_BM接受到pattern后，先init一个BoyerMoore对象，再按照预期大小划分文件，加入线程池
-- test_BM等待自己pattern的所有B子线程结束(join)，返回其总vector的size
-- main等待所有A线程结束，得到所有待搜索结果的size，统一写入times.txt中
-- test_BM封装成一个对象
+用于 CMake 的构建脚本，配置项目依赖、目标和编译选项。
 
-#### AC
-- 天然多线程，不是特别依赖
-- 关键在于将文件更加细致地划分，但是不好处理文件的边界问题
-- 不需要再次封装一个对象，没必要
+- ReadMe.md
+
+本说明文档，提供项目的功能描述、文件说明和使用指南。
+## 搜索实现
+### BoyerMoore算法
+特点：
+
+- 基于跳跃规则（坏字符规则和好后缀规则），快速跳过不可能匹配的区域。
+适合少量关键词和较长的文本模式。
+实现细节：
+
+- 使用 BoyerMooreSearch 类封装了 BM 搜索逻辑，支持多线程并发搜索，提高了搜索效率。
+线程池 的初始化和销毁是通过静态方法完成，避免了手动管理线程的复杂性。
+
+- 搜索完成后自动释放位置，仅记录出现次数，防止占用过大
+
+由于搜索的关键字数目较多，因此每一个关键字不再细分子线程，否则代价过大
+### AhoCorasick算法
+特点：
+
+- 构建多模式搜索自动机，一次遍历即可完成所有关键词的匹配。
+- 适合大量关键词和频繁模式匹配的场景。
+- 保存了所有位置信息，没有做释放逻辑
+
+## 开发思路
+
+### 多线程支持
+#### BM算法
+- 每个keyword开一个线程，因此在keyword特别少如（2.3个）时效率会比较低，但是优于AC算法
+- 在keyword特别多时，不如AC算法，因为AC算法可以直接搜索大量关键字
+#### AC算法
+- 由于算法并非一次搜索一个字符，因此不能在搜索完毕后清理匹配的位置信息
+- 由于搜索大量keyword，因此不宜使用多线程搜索，否则判断边界的开销过大
+- 在keyword特别多以至于匹配的位置信息过大时，应该选择是否清理该信息，在我的程序中，当keyword多于20000个时，便不会保留位置信息
+## 测试
+### BM
+#### 15个keyword
+Time to read keywords: 7.45015 seconds.
+Time to initialize thread pool: 0.920548 seconds.
+Time for keyword search: 1.6844 seconds.
+Keywords num: 15
+Average search time: 0.112293 seconds.
+Total time: 10.0573 seconds.
+#### 35个keyword
+Time to read keywords: 4.72336 seconds.
+Time to initialize thread pool: 0.964866 seconds.
+Time for keyword search: 43.9414 seconds.
+Keywords num: 35
+Average search time: 1.25547 seconds.
+Total time: 49.6315 seconds.
+### AC
+#### 15个keyword
+Time to read keywords: 8.96459 seconds.
+Time to initialize thread pool: 0.911866 seconds.
+Time for keyword search: 5.8814 seconds.
+Keywords num: 15
+Average search time: 0.392093 seconds.
+Total time: 15.7591 seconds.
+#### 35个keyword
+Time to read keywords: 3.18187 seconds.
+Time to initialize thread pool: 0.906534 seconds.
+Time for keyword search: 11.3463 seconds.
+Keywords num: 35
+Average search time: 0.32418 seconds.
+Total time: 15.5237 seconds.
+### 结论
+- BM 算法在少量关键词下表现优越，搜索时间明显低于 AC。
+- AC 算法在关键词数目增多后，随着预处理时间的摊薄，总体效率更高。
