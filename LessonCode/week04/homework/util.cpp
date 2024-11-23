@@ -85,6 +85,7 @@ bool set_config(std::string& file_path, std::string& keywords_path, std::string&
             std::cout << "Invalid input" << std::endl;
         }
     }
+    return is_default_algorithm;
 }
 
 // Write results to a file
