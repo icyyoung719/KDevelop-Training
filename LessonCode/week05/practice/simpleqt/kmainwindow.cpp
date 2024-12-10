@@ -6,6 +6,29 @@ KMainWindow::KMainWindow(QWidget *parent)
 {
     ui.setupUi(this);
     ui.label->setPixmap(QPixmap(":/image/peiqi.png"));
+
+    // 设置最小大小
+    ui.label_2->setMinimumSize(200, 30);
+    ui.label_3->setMinimumSize(200, 30);
+
+    // 设置字体大小
+    QFont font = ui.label_2->font();
+    font.setPointSize(10);
+    ui.label_2->setFont(font);
+
+    QFont font2 = ui.label_3->font();
+    font2.setPointSize(10);
+    ui.label_3->setFont(font2);
+
+    // 启用自动换行
+    ui.label_2->setWordWrap(true);
+    ui.label_3->setWordWrap(true);
+
+    // 设置布局策略
+    QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    ui.label_2->setSizePolicy(sizePolicy);
+    ui.label_3->setSizePolicy(sizePolicy);
+
     ui.label_2->setText("Input your circle radius");//半径
     ui.label_3->setText("The result is");
     ui.label_4->setText("Unknown");
