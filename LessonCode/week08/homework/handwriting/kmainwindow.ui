@@ -40,6 +40,16 @@
      <string>长句手写</string>
     </property>
    </widget>
+   <widget class="ScribbleArea" name="widget" native="true">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>120</y>
+      <width>241</width>
+      <height>141</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -62,6 +72,14 @@
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>ScribbleArea</class>
+   <extends>QWidget</extends>
+   <header>scribblearea.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="kmainwindow.qrc"/>
  </resources>

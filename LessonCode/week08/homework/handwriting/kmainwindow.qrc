@@ -1,4 +1,5 @@
 <RCC>
-    <qresource prefix="KMainWindow">
+    <qresource prefix="/KMainWindow">
+        <file>scribblearea.h</file>
     </qresource>
 </RCC>
