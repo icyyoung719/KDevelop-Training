@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/">
+        <file>image/doodle_default.png</file>
+        <file>image/doodle_hover.png</file>
+        <file>image/doodle_selected.png</file>
+        <file>image/ellipse_default.png</file>
+        <file>image/ellipse_hover.png</file>
+        <file>image/ellipse_selected.png</file>
+        <file>image/line_default.png</file>
+        <file>image/line_hover.png</file>
+        <file>image/line_selected.png</file>
+        <file>image/peiqi.png</file>
+        <file>image/rect_default.png</file>
+        <file>image/rect_hover.png</file>
+        <file>image/rect_selected.png</file>
+    </qresource>
+</RCC>
