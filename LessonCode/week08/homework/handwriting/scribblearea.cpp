@@ -2,120 +2,152 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QDebug>
-#include <QFuture>
-#include <QtConcurrent>
-#include <winrt/Windows.Foundation.Collections.h>
 #include <QFutureWatcher>
 
 ScribbleArea::ScribbleArea(QWidget* parent)
-    : QWidget(parent), scribbling(false), myPenWidth(3) {
-    // 初始化 InkManager
-    inkManager = winrt::Windows::UI::Input::Inking::InkManager();
+    : QWidget(parent), inkCollector(nullptr) {
+    // 初始化 COM 环境
+    HRESULT hr = CoInitialize(nullptr);
+    if (FAILED(hr)) {
+        qDebug() << "Failed to initialize COM. Error:" << hr;
+        return;
+    }
+
+    // 创建 InkCollector 实例
+    hr = CoCreateInstance(CLSID_InkCollector, nullptr, CLSCTX_INPROC_SERVER, IID_IInkCollector, (void**)&inkCollector);
+    if (FAILED(hr)) {
+        qDebug() << "Failed to create InkCollector. Error:" << hr;
+        return;
+    }
+
+    // 将 InkCollector 绑定到窗口
+    hr = inkCollector->put_hWnd(static_cast<LONG_PTR>(winId()));
+    if (FAILED(hr)) {
+        qDebug() << "Failed to attach InkCollector to window. Error:" << hr;
+        return;
+    }
+
+    // 启用墨迹收集
+    hr = inkCollector->put_Enabled(VARIANT_TRUE);
+    if (FAILED(hr)) {
+        qDebug() << "Failed to enable InkCollector. Error:" << hr;
+        return;
+    }
+}
+
+ScribbleArea::~ScribbleArea() {
+    if (inkCollector) {
+        inkCollector->put_Enabled(VARIANT_FALSE); // 禁用墨迹收集
+        inkCollector->Release();
+    }
+    CoUninitialize();
 }
 
 void ScribbleArea::mousePressEvent(QMouseEvent* event) {
-    if (event->button() == Qt::LeftButton) {
-        lastPoint = event->pos();
-        scribbling = true;
-    }
+    // Tablet PC SDK 自动处理鼠标事件
+    QWidget::mousePressEvent(event);
 }
 
 void ScribbleArea::mouseMoveEvent(QMouseEvent* event) {
-    if ((event->buttons() & Qt::LeftButton) && scribbling)
-        drawLineTo(event->pos());
+    // Tablet PC SDK 自动处理鼠标事件
+    QWidget::mouseMoveEvent(event);
 }
 
 void ScribbleArea::mouseReleaseEvent(QMouseEvent* event) {
-    if (event->button() == Qt::LeftButton && scribbling) {
-        drawLineTo(event->pos());
-        scribbling = false;
-
-        // 将当前绘制的线条转换为 InkStroke
-        auto inkPoints = winrt::single_threaded_vector<winrt::Windows::UI::Input::Inking::InkPoint>();
-
-        for (const auto& line : myLines) {
-            inkPoints.Append(winrt::Windows::UI::Input::Inking::InkPoint(
-                winrt::Windows::Foundation::Point(line.line.x1(), line.line.y1()), 1.0f));
-            inkPoints.Append(winrt::Windows::UI::Input::Inking::InkPoint(
-                winrt::Windows::Foundation::Point(line.line.x2(), line.line.y2()), 1.0f));
-        }
-
-        auto strokeBuilder = winrt::Windows::UI::Input::Inking::InkStrokeBuilder();
-        auto stroke = strokeBuilder.CreateStrokeFromInkPoints(inkPoints, winrt::Windows::Foundation::Numerics::float3x2::identity());
-        inkManager.AddStroke(stroke);
-
-        // 创建 QFutureWatcher 来监控异步任务
-        QFutureWatcher<QString>* watcher = new QFutureWatcher<QString>(this);
-        connect(watcher, &QFutureWatcher<QString>::finished, this, [this, watcher]() {
-            QString result = watcher->result();
-            emit recognitionResult(result); // 发射识别结果信号
-            watcher->deleteLater(); // 清理 QFutureWatcher 对象
+    if (event->button() == Qt::LeftButton) {
+        // 开始异步识别墨迹
+        QFuture<QStringList> future = recognizeInkAsync();
+        QFutureWatcher<QStringList>* watcher = new QFutureWatcher<QStringList>(this);
+        connect(watcher, &QFutureWatcher<QStringList>::finished, this, [this, watcher]() {
+            QStringList results = watcher->result();
+            emit recognitionResults(results);
+            for (const QString& result : results) {
+                qDebug() << "Recognition Result:" << result;
+            }
+            watcher->deleteLater();
             });
-
-        // 异步执行识别操作
-        QFuture<QString> future = recognizeInkAsync(); // 获取 QFuture<QString> 返回值
-
         watcher->setFuture(future);
     }
+    QWidget::mouseReleaseEvent(event);
 }
 
 void ScribbleArea::paintEvent(QPaintEvent* /* event */) {
     QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing, true);
-    painter.fillRect(rect(), Qt::white); // 清空背景
-
-    for (const auto& line : myLines) {
-        painter.setPen(QPen(line.color, line.width));
-        painter.drawLine(line.line);
-    }
+    painter.fillRect(rect(), Qt::white); // 背景设置为白色
 }
 
-void ScribbleArea::drawLineTo(const QPoint& endPoint) {
-    QPainter painter(this);
-    painter.setPen(QPen(Qt::black, myPenWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-    painter.drawLine(lastPoint, endPoint);
+QFuture<QStringList> ScribbleArea::recognizeInkAsync() {
+    return QtConcurrent::run([this]() {
+        QStringList results;
 
-    // 更新线条数据
-    myLines.append({ Qt::black, myPenWidth, QLine(lastPoint, endPoint) });
-
-    lastPoint = endPoint;
-    update(); // 触发重绘
-}
-
-QFuture<QString> ScribbleArea::recognizeInkAsync() {
-    return QtConcurrent::run([this]() {  // 异步执行的代码块，lambda 表达式
-        if (!inkManager) {
-            return QString("InkManager not initialized");
+        // 获取 Ink 数据
+        IInkDisp* inkDisp = nullptr;
+        HRESULT hr = inkCollector->get_Ink(&inkDisp);
+        if (FAILED(hr) || inkDisp == nullptr) {
+            results << "Failed to retrieve ink data.";
+            return results;
         }
 
-        // 检查是否有可用的识别器
-        auto recognizerContainer = inkManager.GetRecognizers();
-        if (recognizerContainer.Size() == 0) {
-            return QString("No recognizers found.");
+        // 获取笔触集合
+        IInkStrokes* strokes = nullptr;
+        hr = inkDisp->get_Strokes(&strokes);
+        if (FAILED(hr) || strokes == nullptr) {
+            results << "No strokes available for recognition.";
+            inkDisp->Release();
+            return results;
         }
 
-        // 使用第一个识别器
-        auto recognizer = recognizerContainer.GetAt(0);
-        inkManager.SetDefaultRecognizer(recognizer);
-
-        // 检查 InkManager 是否包含有效数据
-        auto strokes = inkManager.GetStrokes();
-        if (strokes.Size() == 0) {
-            return QString("No strokes available for recognition.");
+        // 创建识别器上下文
+        IInkRecognizerContext* recognizerContext = nullptr;
+        hr = CoCreateInstance(CLSID_InkRecognizerContext, nullptr, CLSCTX_INPROC_SERVER, IID_IInkRecognizerContext, (void**)&recognizerContext);
+        if (FAILED(hr)) {
+            results << "Failed to create InkRecognizerContext.";
+            strokes->Release();
+            inkDisp->Release();
+            return results;
         }
 
-        // 调用识别方法
-        auto recognitionResults = inkManager.RecognizeAsync(winrt::Windows::UI::Input::Inking::InkRecognitionTarget::All).get();
+        recognizerContext->putref_Strokes(strokes);
 
-        QString recognizedText;
-        for (const auto& recognitionResult : recognitionResults) {
-            auto textCandidates = recognitionResult.GetTextCandidates();
-            if (textCandidates.Size() > 0) {
-                recognizedText += QString::fromWCharArray(textCandidates.GetAt(0).c_str()) + " ";
+        // 调用 Recognize 方法
+        IInkRecognitionResult* recognitionResult = nullptr;
+        InkRecognitionStatus status;
+        hr = recognizerContext->Recognize(&status, &recognitionResult);
+        if (SUCCEEDED(hr) && recognitionResult != nullptr) {
+            // 获取识别候选项
+            IInkRecognitionAlternates* alternates = nullptr;
+            hr = recognitionResult->AlternatesFromSelection(0, -1, 10, &alternates);
+            if (SUCCEEDED(hr) && alternates != nullptr) {
+                long count = 0;
+                alternates->get_Count(&count);
+
+                for (long i = 0; i < count; ++i) {
+                    IInkRecognitionAlternate* alternate = nullptr;
+                    alternates->Item(i, &alternate);
+                    if (alternate) {
+                        BSTR text;
+                        alternate->get_String(&text);
+                        results << QString::fromWCharArray(text);
+                        SysFreeString(text);
+                        alternate->Release();
+                    }
+                }
+
+                alternates->Release();
             }
+            recognitionResult->Release();
         }
 
-        return recognizedText.trimmed(); // 返回识别的文本
+        // 在资源释放前处理结果
+        for (const auto& result : results) {
+            qDebug() << QString(result);
+        }
+
+
+        recognizerContext->Release();
+        strokes->Release();
+        inkDisp->Release();
+
+        return results;
         });
 }
-
