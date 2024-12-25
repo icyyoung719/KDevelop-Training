@@ -10,6 +10,10 @@ class KMainWindow : public QMainWindow
 public:
     KMainWindow(QWidget* parent = Q_NULLPTR);
     void onClickedButton();
+
+public slots:
+    void updateButtonLabels(const QStringList& labels);
+
 private:
     Ui::KMainWindowClass ui;
 };

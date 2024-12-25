@@ -1,3 +1,4 @@
+// scribblearea.cpp
 #include "scribblearea.h"
 #include <QMouseEvent>
 #include <QPainter>
@@ -60,7 +61,7 @@ void ScribbleArea::mouseReleaseEvent(QMouseEvent* event) {
         QFutureWatcher<QStringList>* watcher = new QFutureWatcher<QStringList>(this);
         connect(watcher, &QFutureWatcher<QStringList>::finished, this, [this, watcher]() {
             QStringList results = watcher->result();
-            emit recognitionResults(results);
+            emit recognitionResults(results);  // 发送识别结果信号
             for (const QString& result : results) {
                 qDebug() << "Recognition Result:" << result;
             }
@@ -139,11 +140,6 @@ QFuture<QStringList> ScribbleArea::recognizeInkAsync() {
         }
 
         // 在资源释放前处理结果
-        for (const auto& result : results) {
-            qDebug() << QString(result);
-        }
-
-
         recognizerContext->Release();
         strokes->Release();
         inkDisp->Release();
