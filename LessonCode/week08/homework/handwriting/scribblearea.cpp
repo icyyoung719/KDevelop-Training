@@ -2,7 +2,10 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QDebug>
+#include <QFuture>
+#include <QtConcurrent>
 #include <winrt/Windows.Foundation.Collections.h>
+#include <QFutureWatcher>
 
 ScribbleArea::ScribbleArea(QWidget* parent)
     : QWidget(parent), scribbling(false), myPenWidth(3) {
@@ -41,8 +44,18 @@ void ScribbleArea::mouseReleaseEvent(QMouseEvent* event) {
         auto stroke = strokeBuilder.CreateStrokeFromInkPoints(inkPoints, winrt::Windows::Foundation::Numerics::float3x2::identity());
         inkManager.AddStroke(stroke);
 
-        // 调用识别功能并输出结果
-        qDebug() << "Recognized Text:" << recognizeInk();
+        // 创建 QFutureWatcher 来监控异步任务
+        QFutureWatcher<QString>* watcher = new QFutureWatcher<QString>(this);
+        connect(watcher, &QFutureWatcher<QString>::finished, this, [this, watcher]() {
+            QString result = watcher->result();
+            emit recognitionResult(result); // 发射识别结果信号
+            watcher->deleteLater(); // 清理 QFutureWatcher 对象
+            });
+
+        // 异步执行识别操作
+        QFuture<QString> future = recognizeInkAsync(); // 获取 QFuture<QString> 返回值
+
+        watcher->setFuture(future);
     }
 }
 
@@ -69,12 +82,12 @@ void ScribbleArea::drawLineTo(const QPoint& endPoint) {
     update(); // 触发重绘
 }
 
-QString ScribbleArea::recognizeInk() {
-    if (!inkManager) {
-        return QString("InkManager not initialized");
-    }
+QFuture<QString> ScribbleArea::recognizeInkAsync() {
+    return QtConcurrent::run([this]() {  // 异步执行的代码块，lambda 表达式
+        if (!inkManager) {
+            return QString("InkManager not initialized");
+        }
 
-    try {
         // 检查是否有可用的识别器
         auto recognizerContainer = inkManager.GetRecognizers();
         if (recognizerContainer.Size() == 0) {
@@ -103,16 +116,6 @@ QString ScribbleArea::recognizeInk() {
         }
 
         return recognizedText.trimmed(); // 返回识别的文本
-
-    }
-    catch (const winrt::hresult_error& ex) {
-        // 捕获 WinRT 异常并输出详细错误信息
-        qDebug() << "Recognition failed with error:" << QString::fromWCharArray(ex.message().c_str());
-        return QString("Recognition failed.");
-    }
-    catch (...) {
-        // 捕获其他异常
-        qDebug() << "Unknown error occurred during recognition.";
-        return QString("Recognition failed due to an unknown error.");
-    }
+        });
 }
+

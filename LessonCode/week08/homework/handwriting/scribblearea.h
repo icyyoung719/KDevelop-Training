@@ -6,6 +6,7 @@
 #include <QPoint>
 #include <QColor>
 #include <QString>
+#include <QtConcurrent>
 
 // 引入 WinRT 和 Windows Ink 相关的头文件
 #include <winrt/Windows.Foundation.h>
@@ -17,6 +18,10 @@ class ScribbleArea : public QWidget {
 
 public:
     explicit ScribbleArea(QWidget* parent = nullptr);
+
+signals:
+    void recognitionResult(const QString& result);  // 定义信号，用于返回识别结果
+
 
 protected:
     void mousePressEvent(QMouseEvent* event) override;
@@ -31,15 +36,15 @@ private:
         QLine line;
     };
 
-    QVector<LineData> myLines; // 保存绘制的线条数据
-    QPoint lastPoint;          // 上一次鼠标位置
-    bool scribbling;           // 是否正在绘制
-    int myPenWidth;            // 笔触宽度
+    QVector<LineData> myLines;           // 保存绘制的线条数据
+    QPoint lastPoint;                    // 上一次鼠标位置
+    bool scribbling;                     // 是否正在绘制
+    int myPenWidth;                      // 笔触宽度
 
     winrt::Windows::UI::Input::Inking::InkManager inkManager; // InkManager 实例
 
-    void drawLineTo(const QPoint& endPoint);
-    QString recognizeInk(); // 调用笔迹识别
-};
+    void drawLineTo(const QPoint& endPoint);   // 绘制线条
+    QFuture<QString> recognizeInkAsync();    // 异步识别笔迹
 
+};
 #endif // SCRIBBLEAREA_H
