@@ -1,9 +1,22 @@
-// scribblearea.cpp
 #include "scribblearea.h"
 #include <QMouseEvent>
 #include <QPainter>
 #include <QDebug>
 #include <QFutureWatcher>
+
+const QStringList ScribbleArea::defaultRecognitionResults = {
+    QString::fromWCharArray(L"你"),
+    QString::fromWCharArray(L"我"),
+    QString::fromWCharArray(L"他"),
+    QString::fromWCharArray(L"是"),
+    QString::fromWCharArray(L"了"),
+    QString::fromWCharArray(L"就"),
+    QString::fromWCharArray(L"在"),
+    QString::fromWCharArray(L"的"),
+    QString::fromWCharArray(L"都"),
+    QString::fromWCharArray(L"有")
+};
+
 
 ScribbleArea::ScribbleArea(QWidget* parent)
     : QWidget(parent), inkCollector(nullptr) {
@@ -68,6 +81,29 @@ void ScribbleArea::mouseReleaseEvent(QMouseEvent* event) {
             watcher->deleteLater();
             });
         watcher->setFuture(future);
+
+        // 将当前笔触添加到撤销列表
+        IInkDisp* inkDisp = nullptr;
+        inkCollector->get_Ink(&inkDisp);
+        if (inkDisp) {
+            IInkStrokes* strokes = nullptr;
+            inkDisp->get_Strokes(&strokes);
+            if (strokes) {
+                long count = 0;
+                strokes->get_Count(&count);
+                if (count > 0) {
+                    IInkStrokeDisp* stroke = nullptr;
+                    strokes->Item(count - 1, &stroke);
+                    if (stroke) {
+                        strokesList.append(stroke); // 添加当前笔触到撤销列表
+                        emit canUndoChanged(true);  // 更新撤销按钮状态
+                        emit canClearChanged(true);  // 更新撤销按钮状态
+                    }
+                }
+                strokes->Release();
+            }
+            inkDisp->Release();
+        }
     }
     QWidget::mouseReleaseEvent(event);
 }
@@ -147,3 +183,51 @@ QFuture<QStringList> ScribbleArea::recognizeInkAsync() {
         return results;
         });
 }
+
+void ScribbleArea::undo() {
+    if (!strokesList.isEmpty()) {
+        // 删除最后一个笔触
+        IInkStrokeDisp* lastStroke = strokesList.takeLast();
+        IInkDisp* inkDisp = nullptr;
+        inkCollector->get_Ink(&inkDisp);  // 获取 InkDisp 对象
+        if (inkDisp) {
+            IInkStrokes* strokes = nullptr;
+            inkDisp->get_Strokes(&strokes);  // 获取笔触集合
+            if (strokes) {
+                strokes->Remove(lastStroke);  // 删除指定的笔触
+                strokes->Release();
+            }
+            inkDisp->Release();
+        }
+        emit canUndoChanged(!strokesList.isEmpty()); // 更新撤销按钮状态
+    }
+}
+
+void ScribbleArea::clear() {
+    // 禁用 InkCollector，清除所有墨迹数据
+    if (inkCollector) {
+        inkCollector->put_Enabled(VARIANT_FALSE); // 禁用 InkCollector
+    }
+
+    // 获取 InkDisp 对象并清除其中的所有笔触
+    IInkDisp* inkDisp = nullptr;
+    inkCollector->get_Ink(&inkDisp);  // 获取当前 InkDisp 对象
+    if (inkDisp) {
+        inkDisp->DeleteStrokes();
+    }
+
+    // 清空本地笔触列表
+    strokesList.clear();
+
+    // 重新启用 InkCollector 并准备收集新的墨迹
+    HRESULT hr = inkCollector->put_Enabled(VARIANT_TRUE); // 启用 InkCollector
+    if (FAILED(hr)) {
+        qDebug() << "Failed to re-enable InkCollector after clearing.";
+    }
+
+    // 发射信号更新界面状态
+    emit recognitionResults(ScribbleArea::defaultRecognitionResults); // 更新显示的默认文字
+    emit canUndoChanged(false); // 更新撤销按钮状态
+    emit canClearChanged(false); // 更新清空按钮状态
+}
+

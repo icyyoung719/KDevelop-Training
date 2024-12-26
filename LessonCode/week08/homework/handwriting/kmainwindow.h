@@ -10,6 +10,8 @@ class KMainWindow : public QMainWindow
 public:
     KMainWindow(QWidget* parent = Q_NULLPTR);
     void onClickedButton();
+    void KMainWindow::updateUndoButton(bool canUndo);
+    void KMainWindow::updateClearButton(bool canClear);
 
 public slots:
     void updateButtonLabels(const QStringList& labels);
