@@ -95,7 +95,8 @@ void ScribbleArea::mouseReleaseEvent(QMouseEvent* event) {
                     IInkStrokeDisp* stroke = nullptr;
                     strokes->Item(count - 1, &stroke);
                     if (stroke) {
-                        strokesList.append(stroke); // 添加当前笔触到撤销列表
+						strokesList.push_back(stroke); // 添加当前笔触到撤销列表
+                        //strokesList.append(stroke); // 添加当前笔触到撤销列表
                         emit canUndoChanged(true);  // 更新撤销按钮状态
                         emit canClearChanged(true);  // 更新撤销按钮状态
                     }
@@ -184,23 +185,58 @@ QFuture<QStringList> ScribbleArea::recognizeInkAsync() {
         });
 }
 
+// 撤销最后一个笔触
 void ScribbleArea::undo() {
-    if (!strokesList.isEmpty()) {
-        // 删除最后一个笔触
-        IInkStrokeDisp* lastStroke = strokesList.takeLast();
-        IInkDisp* inkDisp = nullptr;
-        inkCollector->get_Ink(&inkDisp);  // 获取 InkDisp 对象
-        if (inkDisp) {
-            IInkStrokes* strokes = nullptr;
-            inkDisp->get_Strokes(&strokes);  // 获取笔触集合
-            if (strokes) {
-                strokes->Remove(lastStroke);  // 删除指定的笔触
-                strokes->Release();
-            }
-            inkDisp->Release();
-        }
-        emit canUndoChanged(!strokesList.isEmpty()); // 更新撤销按钮状态
+    if (strokesList.empty()) {
+        emit canUndoChanged(false); // 如果没有可以撤销的笔触，则禁用撤销按钮
+        return;
     }
+
+    IInkDisp* inkDisp = nullptr;
+    HRESULT hr = inkCollector->get_Ink(&inkDisp);
+    if (FAILED(hr) || !inkDisp) {
+        qDebug() << "Failed to get InkDisp for undo.";
+        return;
+    }
+
+    // 获取 InkStrokes 集合
+    IInkStrokes* strokes = nullptr;
+    hr = inkDisp->get_Strokes(&strokes);
+    if (FAILED(hr) || !strokes) {
+        qDebug() << "Failed to get strokes collection.";
+        inkDisp->Release();
+        return;
+    }
+
+    // 获取当前笔触数量
+    long count = 0;
+    strokes->get_Count(&count);
+    qDebug() << "Number of strokes in InkDisp before undo:" << count << '\n';
+
+    // 获取最后一个笔触并从 InkDisp 中删除它
+    IInkStrokeDisp* lastStroke = strokesList.back();
+    if (lastStroke) {
+        hr = strokes->Remove(lastStroke);
+        hr = inkDisp->DeleteStroke(lastStroke);
+        if (SUCCEEDED(hr)) {
+            strokesList.pop_back(); // 从本地列表中移除该笔触
+            emit canUndoChanged(!strokesList.empty()); // 更新撤销按钮状态
+        }
+        else {
+            qDebug() << "Failed to delete stroke from InkDisp.";
+        }
+        lastStroke->Release();
+    }
+
+    // 获取更新后的笔触数量
+    strokes->get_Count(&count);
+    qDebug() << "Number of strokes in InkDisp after undo:" << count << '\n';
+
+    strokes->Release();
+    inkDisp->Release();
+
+    // 强制刷新界面以显示最新的墨迹状态
+    update();
 }
 
 void ScribbleArea::clear() {
@@ -214,6 +250,7 @@ void ScribbleArea::clear() {
     inkCollector->get_Ink(&inkDisp);  // 获取当前 InkDisp 对象
     if (inkDisp) {
         inkDisp->DeleteStrokes();
+		inkDisp->Release();
     }
 
     // 清空本地笔触列表
@@ -230,4 +267,3 @@ void ScribbleArea::clear() {
     emit canUndoChanged(false); // 更新撤销按钮状态
     emit canClearChanged(false); // 更新清空按钮状态
 }
-
