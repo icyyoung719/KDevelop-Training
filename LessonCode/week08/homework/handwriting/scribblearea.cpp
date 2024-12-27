@@ -48,10 +48,15 @@ ScribbleArea::ScribbleArea(QWidget* parent)
         return;
     }
 
-    // 获取默认的绘图属性
-    hr = inkCollector->get_DefaultDrawingAttributes(&drawingAttributes);
+    // 获取默认的绘图属性并克隆
+    IInkDrawingAttributes* defaultDrawingAttributes = nullptr;
+    hr = inkCollector->get_DefaultDrawingAttributes(&defaultDrawingAttributes);
     if (FAILED(hr)) {
         qDebug() << "Failed to get DefaultDrawingAttributes. Error:" << hr;
+    }
+    else {
+        // 直接使用默认的绘图属性
+        penAttributes = PenAttributes(defaultDrawingAttributes);
     }
 }
 
@@ -60,9 +65,7 @@ ScribbleArea::~ScribbleArea() {
         inkCollector->put_Enabled(VARIANT_FALSE); // 禁用墨迹收集
         inkCollector->Release();
     }
-    if (drawingAttributes) {
-        drawingAttributes->Release();
-    }
+	// penAttributes 的析构函数会自动释放 IInkDrawingAttributes 对象,不需要手动释放
     CoUninitialize();
 }
 
@@ -272,8 +275,8 @@ void ScribbleArea::clear() {
     }
 
 	// 测试setPenColor和setPenWidth方法
-	setPenColor(QColor(255, 0, 0)); // 设置笔的颜色为红色
-	setPenWidth(5); // 设置笔的粗细为5
+	//setPenColor(QColor(255, 0, 0)); // 设置笔的颜色为红色
+	//setPenWidth(5); // 设置笔的粗细为5
 
     // 发射信号更新界面状态
     emit recognitionResults(ScribbleArea::defaultRecognitionResults); // 更新显示的默认文字
@@ -282,33 +285,9 @@ void ScribbleArea::clear() {
 }
 
 void ScribbleArea::setPenColor(const QColor& color) {
-    if (!drawingAttributes) {
-        HRESULT hr = inkCollector->get_DefaultDrawingAttributes(&drawingAttributes);
-        if (FAILED(hr)) {
-            qDebug() << "Failed to get DefaultDrawingAttributes. Error:" << hr;
-            return;
-        }
-    }
-
-    // 将 QColor 转换为 RGB 值
-    COLORREF rgbColor = RGB(color.red(), color.green(), color.blue());
-    HRESULT hr = drawingAttributes->put_Color(rgbColor);
-    if (FAILED(hr)) {
-        qDebug() << "Failed to set pen color. Error:" << hr;
-    }
+    penAttributes.setColor(color);
 }
 
 void ScribbleArea::setPenWidth(int width) {
-    if (!drawingAttributes) {
-        HRESULT hr = inkCollector->get_DefaultDrawingAttributes(&drawingAttributes);
-        if (FAILED(hr)) {
-            qDebug() << "Failed to get DefaultDrawingAttributes. Error:" << hr;
-            return;
-        }
-    }
-
-    HRESULT hr = drawingAttributes->put_Width(static_cast<float>(width));
-    if (FAILED(hr)) {
-        qDebug() << "Failed to set pen width. Error:" << hr;
-    }
+    penAttributes.setWidth(width);
 }

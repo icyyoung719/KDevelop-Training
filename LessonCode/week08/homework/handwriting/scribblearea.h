@@ -9,6 +9,8 @@
 #include <msinkaut.h>
 #include <msinkaut_i.c> // Tablet PC SDK 的 COM 接口定义
 
+#include "penattributes.h" // 墨迹绘图属性
+
 class ScribbleArea : public QWidget {
     Q_OBJECT
 
@@ -40,7 +42,8 @@ private:
 
     IInkCollector* inkCollector; // Tablet PC SDK 的墨迹收集器
     QList<IInkStrokeDisp*> strokesList; // 记录已绘制的所有笔触（用于撤销）
-    IInkDrawingAttributes* drawingAttributes; // 墨迹绘图属性
+
+    PenAttributes penAttributes; // 笔的属性
 
     QFuture<QStringList> recognizeInkAsync(); // 异步手写识别
     void onRecognitionFinished();            // 处理识别结果
