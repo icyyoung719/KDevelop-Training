@@ -18,6 +18,9 @@ public:
     explicit ScribbleArea(QWidget* parent = nullptr);
     ~ScribbleArea();
 
+    void setPenColor(const QColor& color); // 设置笔的颜色
+    void setPenWidth(int width);           // 设置笔的粗细
+
 signals:
     void recognitionResults(const QStringList& results); // 识别结果信号，emit以刷新页面中显示的文字
     void canUndoChanged(bool canUndo); // 是否可以撤销信号，emit以更新按钮是否可用
@@ -37,6 +40,7 @@ private:
 
     IInkCollector* inkCollector; // Tablet PC SDK 的墨迹收集器
     QList<IInkStrokeDisp*> strokesList; // 记录已绘制的所有笔触（用于撤销）
+    IInkDrawingAttributes* drawingAttributes; // 墨迹绘图属性
 
     QFuture<QStringList> recognizeInkAsync(); // 异步手写识别
     void onRecognitionFinished();            // 处理识别结果

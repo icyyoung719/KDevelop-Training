@@ -2,12 +2,12 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QDebug>
+#include <QColor>
 #include <QFutureWatcher>
 
 const QStringList ScribbleArea::defaultRecognitionResults = {
     QString::fromWCharArray(L"你"),
     QString::fromWCharArray(L"我"),
-    QString::fromWCharArray(L"他"),
     QString::fromWCharArray(L"是"),
     QString::fromWCharArray(L"了"),
     QString::fromWCharArray(L"就"),
@@ -47,12 +47,21 @@ ScribbleArea::ScribbleArea(QWidget* parent)
         qDebug() << "Failed to enable InkCollector. Error:" << hr;
         return;
     }
+
+    // 获取默认的绘图属性
+    hr = inkCollector->get_DefaultDrawingAttributes(&drawingAttributes);
+    if (FAILED(hr)) {
+        qDebug() << "Failed to get DefaultDrawingAttributes. Error:" << hr;
+    }
 }
 
 ScribbleArea::~ScribbleArea() {
     if (inkCollector) {
         inkCollector->put_Enabled(VARIANT_FALSE); // 禁用墨迹收集
         inkCollector->Release();
+    }
+    if (drawingAttributes) {
+        drawingAttributes->Release();
     }
     CoUninitialize();
 }
@@ -262,8 +271,44 @@ void ScribbleArea::clear() {
         qDebug() << "Failed to re-enable InkCollector after clearing.";
     }
 
+	// 测试setPenColor和setPenWidth方法
+	setPenColor(QColor(255, 0, 0)); // 设置笔的颜色为红色
+	setPenWidth(5); // 设置笔的粗细为5
+
     // 发射信号更新界面状态
     emit recognitionResults(ScribbleArea::defaultRecognitionResults); // 更新显示的默认文字
     emit canUndoChanged(false); // 更新撤销按钮状态
     emit canClearChanged(false); // 更新清空按钮状态
+}
+
+void ScribbleArea::setPenColor(const QColor& color) {
+    if (!drawingAttributes) {
+        HRESULT hr = inkCollector->get_DefaultDrawingAttributes(&drawingAttributes);
+        if (FAILED(hr)) {
+            qDebug() << "Failed to get DefaultDrawingAttributes. Error:" << hr;
+            return;
+        }
+    }
+
+    // 将 QColor 转换为 RGB 值
+    COLORREF rgbColor = RGB(color.red(), color.green(), color.blue());
+    HRESULT hr = drawingAttributes->put_Color(rgbColor);
+    if (FAILED(hr)) {
+        qDebug() << "Failed to set pen color. Error:" << hr;
+    }
+}
+
+void ScribbleArea::setPenWidth(int width) {
+    if (!drawingAttributes) {
+        HRESULT hr = inkCollector->get_DefaultDrawingAttributes(&drawingAttributes);
+        if (FAILED(hr)) {
+            qDebug() << "Failed to get DefaultDrawingAttributes. Error:" << hr;
+            return;
+        }
+    }
+
+    HRESULT hr = drawingAttributes->put_Width(static_cast<float>(width));
+    if (FAILED(hr)) {
+        qDebug() << "Failed to set pen width. Error:" << hr;
+    }
 }
