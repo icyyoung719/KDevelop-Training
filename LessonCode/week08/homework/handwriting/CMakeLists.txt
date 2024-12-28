@@ -34,6 +34,9 @@ source_group("Resource Files" FILES ${RCC_FILES})
 # 创建目标执行文件，并链接Qt5的相关模块
 add_executable(${PROJECT_NAME} WIN32 ${HEADER_FILES} ${CPP_FILES} ${UI_FILES} ${RCC_FILES})
 
+# 确保 AUTOMOC 属性应用于目标
+set_target_properties(${PROJECT_NAME} PROPERTIES AUTOMOC ON)
+
 target_link_libraries(${PROJECT_NAME} 
     Qt5::Widgets
     Qt5::Core

@@ -20,8 +20,15 @@ public:
     explicit ScribbleArea(QWidget* parent = nullptr);
     ~ScribbleArea();
 
+    enum class RecognitionMode { // 识别模式
+        Auto,
+        Word,
+        Sentence
+    };
+
     void setPenColor(const QColor& color); // 设置笔的颜色
     void setPenWidth(int width);           // 设置笔的粗细
+    void setRecognitionMode(RecognitionMode mode); // 设置识别模式
 
 signals:
     void recognitionResults(const QStringList& results); // 识别结果信号，emit以刷新页面中显示的文字
@@ -39,14 +46,13 @@ protected:
     void paintEvent(QPaintEvent* event) override;
 
 private:
-
     IInkCollector* inkCollector; // Tablet PC SDK 的墨迹收集器
     QList<IInkStrokeDisp*> strokesList; // 记录已绘制的所有笔触（用于撤销）
 
     PenAttributes penAttributes; // 笔的属性
+    RecognitionMode recognitionMode; // 当前识别模式
 
     QFuture<QStringList> recognizeInkAsync(); // 异步手写识别
-    void onRecognitionFinished();            // 处理识别结果
 };
 
 #endif // SCRIBBLEAREA_H

@@ -50,7 +50,7 @@ ScribbleArea::ScribbleArea(QWidget* parent)
         return;
     }
 
-    // 获取默认的绘图属性并克隆
+    // 获取默认的绘图属性
     IInkDrawingAttributes* defaultDrawingAttributes = nullptr;
     hr = inkCollector->get_DefaultDrawingAttributes(&defaultDrawingAttributes);
     if (FAILED(hr)) {
@@ -60,6 +60,8 @@ ScribbleArea::ScribbleArea(QWidget* parent)
         // 直接使用默认的绘图属性
         penAttributes = PenAttributes(defaultDrawingAttributes);
     }
+
+    // 
 }
 
 ScribbleArea::~ScribbleArea() {
@@ -290,6 +292,9 @@ void ScribbleArea::undo() {
 
     // 获取更新后的笔触数量
     strokes->get_Count(&count);
+	if (count == 0) {
+        emit recognitionResults(ScribbleArea::defaultRecognitionResults); // 更新显示的默认文字
+	}
     qDebug() << "Number of strokes in InkDisp after undo:" << count << '\n';
 
     strokes->Release();
@@ -350,4 +355,8 @@ void ScribbleArea::setPenColor(const QColor& color) {
 
 void ScribbleArea::setPenWidth(int width) {
     penAttributes.setWidth(width);
+}
+
+void ScribbleArea::setRecognitionMode(RecognitionMode mode) {
+    recognitionMode = mode;
 }
