@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QColor>
 #include <QFutureWatcher>
+#include <windows.h> // For GetDC and ReleaseDC
 
 const QStringList ScribbleArea::defaultRecognitionResults = {
     QString::fromWCharArray(L"你"),
@@ -108,7 +109,6 @@ void ScribbleArea::mouseReleaseEvent(QMouseEvent* event) {
                     strokes->Item(count - 1, &stroke);
                     if (stroke) {
 						strokesList.push_back(stroke); // 添加当前笔触到撤销列表
-                        //strokesList.append(stroke); // 添加当前笔触到撤销列表
                         emit canUndoChanged(true);  // 更新撤销按钮状态
                         emit canClearChanged(true);  // 更新撤销按钮状态
                     }
@@ -124,6 +124,52 @@ void ScribbleArea::mouseReleaseEvent(QMouseEvent* event) {
 void ScribbleArea::paintEvent(QPaintEvent* /* event */) {
     QPainter painter(this);
     painter.fillRect(rect(), Qt::white); // 背景设置为白色
+
+    IInkDisp* inkDisp = nullptr;
+    HRESULT hr = inkCollector->get_Ink(&inkDisp);
+    if (FAILED(hr) || inkDisp == nullptr) {
+        qDebug() << "Failed to retrieve InkDisp.";
+        return;
+    }
+
+    IInkRenderer* renderer = nullptr;
+    hr = CoCreateInstance(CLSID_InkRenderer, nullptr, CLSCTX_INPROC_SERVER, IID_IInkRenderer, (void**)&renderer);
+    if (FAILED(hr) || renderer == nullptr) {
+        qDebug() << "Failed to create InkRenderer.";
+        inkDisp->Release();
+        return;
+    }
+
+    // 获取窗口句柄
+    HWND hwnd = (HWND)winId();
+    HDC hdc = GetDC(hwnd); // 获取设备上下文
+    if (hdc == nullptr) {
+        qDebug() << "Failed to get HDC from HWND.";
+        renderer->Release();
+        inkDisp->Release();
+        return;
+    }
+
+    IInkStrokes* strokes = nullptr;
+    hr = inkDisp->get_Strokes(&strokes);
+    if (FAILED(hr) || strokes == nullptr) {
+        qDebug() << "Failed to get strokes collection.";
+        renderer->Release();
+        inkDisp->Release();
+        ReleaseDC(hwnd, hdc); // 释放设备上下文
+        return;
+    }
+
+    hr = renderer->Draw((LONG_PTR)hdc, strokes);
+    if (FAILED(hr)) {
+        qDebug() << "Failed to draw strokes. Error:" << hr;
+    }
+
+    // 释放资源
+    strokes->Release();
+    renderer->Release();
+    inkDisp->Release();
+    ReleaseDC(hwnd, hdc); // 释放设备上下文
 }
 
 QFuture<QStringList> ScribbleArea::recognizeInkAsync() {
@@ -233,6 +279,7 @@ void ScribbleArea::undo() {
         if (SUCCEEDED(hr)) {
             strokesList.pop_back(); // 从本地列表中移除该笔触
             emit canUndoChanged(!strokesList.empty()); // 更新撤销按钮状态
+			emit canClearChanged(!strokesList.empty()); // 更新清空按钮状态
         }
         else {
             qDebug() << "Failed to delete stroke from InkDisp.";
@@ -248,7 +295,7 @@ void ScribbleArea::undo() {
     inkDisp->Release();
 
     // 强制刷新界面以显示最新的墨迹状态
-    update();
+    repaint(); // 使用 repaint() 立即强制重绘窗口
 }
 
 void ScribbleArea::clear() {
@@ -274,14 +321,13 @@ void ScribbleArea::clear() {
         qDebug() << "Failed to re-enable InkCollector after clearing.";
     }
 
-	// 测试setPenColor和setPenWidth方法
-	//setPenColor(QColor(255, 0, 0)); // 设置笔的颜色为红色
-	//setPenWidth(5); // 设置笔的粗细为5
-
     // 发射信号更新界面状态
     emit recognitionResults(ScribbleArea::defaultRecognitionResults); // 更新显示的默认文字
     emit canUndoChanged(false); // 更新撤销按钮状态
     emit canClearChanged(false); // 更新清空按钮状态
+
+    // 强制刷新界面以显示最新的墨迹状态
+    update();
 }
 
 void ScribbleArea::setPenColor(const QColor& color) {
