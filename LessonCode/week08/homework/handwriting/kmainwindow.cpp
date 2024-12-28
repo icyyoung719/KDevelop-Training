@@ -12,7 +12,7 @@ KMainWindow::KMainWindow(QWidget* parent)
     // 连接按钮
     connect(ui.singleWordPushButton, &QPushButton::clicked, this, &KMainWindow::onClickedButton);
     connect(ui.undoOneStrokeButton, &QPushButton::pressed, ui.scribblearea, &ScribbleArea::undo);
-    connect(ui.clearStrokesButton, &QPushButton::clicked, ui.scribblearea, &ScribbleArea::clear);
+    connect(ui.clearStrokesButton, &QPushButton::pressed, ui.scribblearea, &ScribbleArea::clear);
 
 	// 将显示文本的按钮的clicked信号连接到kmainwindow的onClickedButton槽函数
     connect(ui.pushButton_5, &QPushButton::clicked, this, [this]() {

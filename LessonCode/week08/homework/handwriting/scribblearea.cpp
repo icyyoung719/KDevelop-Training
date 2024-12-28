@@ -15,7 +15,8 @@ const QStringList ScribbleArea::defaultRecognitionResults = {
     QString::fromWCharArray(L"在"),
     QString::fromWCharArray(L"的"),
     QString::fromWCharArray(L"都"),
-    QString::fromWCharArray(L"有")
+    QString::fromWCharArray(L"有"),
+	QString::fromWCharArray(L"不")
 };
 
 
@@ -294,8 +295,21 @@ void ScribbleArea::undo() {
     strokes->Release();
     inkDisp->Release();
 
+    // 将剩余的笔触重新识别
+    QFuture<QStringList> future = recognizeInkAsync();
+    QFutureWatcher<QStringList>* watcher = new QFutureWatcher<QStringList>(this);
+    connect(watcher, &QFutureWatcher<QStringList>::finished, this, [this, watcher]() {
+        QStringList results = watcher->result();
+        emit recognitionResults(results);  // 发送识别结果信号
+        for (const QString& result : results) {
+            qDebug() << "Recognition Result:" << result;
+        }
+        watcher->deleteLater();
+        });
+    watcher->setFuture(future);
+
     // 强制刷新界面以显示最新的墨迹状态
-    repaint(); // 使用 repaint() 立即强制重绘窗口
+    repaint(); 
 }
 
 void ScribbleArea::clear() {
@@ -327,7 +341,7 @@ void ScribbleArea::clear() {
     emit canClearChanged(false); // 更新清空按钮状态
 
     // 强制刷新界面以显示最新的墨迹状态
-    update();
+    repaint();
 }
 
 void ScribbleArea::setPenColor(const QColor& color) {
