@@ -12,4 +12,6 @@ public:
 protected:
     // 重写鼠标释放事件
     void mouseReleaseEvent(QMouseEvent* event) override;
+signals:
+    void sendText(const QString& text);
 };

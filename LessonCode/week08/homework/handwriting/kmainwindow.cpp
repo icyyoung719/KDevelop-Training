@@ -10,22 +10,20 @@ KMainWindow::KMainWindow(QWidget* parent)
     connect(ui.scribblearea, &ScribbleArea::canClearChanged, this, &KMainWindow::updateClearButton);
 
     // 连接按钮
-    connect(ui.singleWordPushButton, &QPushButton::clicked, this, &KMainWindow::onClickedButton);
     connect(ui.undoOneStrokeButton, &QPushButton::pressed, ui.scribblearea, &ScribbleArea::undo);
     connect(ui.clearStrokesButton, &QPushButton::pressed, ui.scribblearea, &ScribbleArea::clear);
 
     // 识别模式按钮
 	connect(ui.autoModeButton, &QPushButton::clicked, this, &KMainWindow::updateRecognitionMode);
 
+    // 连接文字按钮点击信号到槽函数
+    connect(ui.resultTextButton_1, &SendTextButton::sendText, this, &KMainWindow::sendText);
+
     // 非中文输入按钮
 	connect(ui.letterModeButton, &QPushButton::clicked, this, &KMainWindow::showNonChineseInputWidget);
 	connect(ui.numberModeButton, &QPushButton::clicked, this, &KMainWindow::showNonChineseInputWidget);
 	connect(ui.punctuationModeButton, &QPushButton::clicked, this, &KMainWindow::showNonChineseInputWidget);
-
-	// 将显示文本的按钮的clicked信号连接到kmainwindow的onClickedButton槽函数
-    connect(ui.pushButton_5, &QPushButton::clicked, this, [this]() {
-        tsfManager->InsertTextAtCaret(ui.pushButton_5->text().toStdWString().c_str());
-        });
+    connect(ui.ChineseModeButton, &QPushButton::clicked, this, &KMainWindow::hideNonChineseInputWidget);
 
     // 将 R G B 三个滑动条的 valueChanged 信号连接到 updateCustomColorButtonColor 槽函数 
     connect(ui.RValueSpinBox, SIGNAL(valueChanged(int)), this, SLOT(updateCustomColorButtonColor()));
@@ -34,6 +32,8 @@ KMainWindow::KMainWindow(QWidget* parent)
 
 	// 将lineWidthSpinBox的valueChanged信号连接到updateCustomWidthLineWidth槽函数
 	connect(ui.lineWidthSpinBox, SIGNAL(valueChanged(int)), this, SLOT(updateCustomWidthLineWidth()));
+    // 将wordWidthComboBox的valueChanged信号连接到updateButtonFontSize槽函数
+    connect(ui.wordWidthComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &KMainWindow::updateButtonFontSize);
 
 	// 将colorButton的clicked信号连接到ScribbleArea的setPenColor槽函数
     connect(ui.greyColorButton, &QPushButton::clicked, this, &KMainWindow::setPenColorFromButton);
@@ -54,16 +54,7 @@ KMainWindow::KMainWindow(QWidget* parent)
         });
 
 	// init后的默认状态
-    updateButtonLabels(ScribbleArea::defaultRecognitionResults); // 更新显示的默认文字
-    updateUndoButton(false); // 更新撤销按钮状态
-    updateClearButton(false); // 更新清空按钮状态
-    updateCustomColorButtonColor(); // 更新showCustomColorButton的颜色
-	ui.tabWidget->tabBar()->hide(); // 隐藏tabBar
-	ui.autoModeButton->clicked(); // 默认自动识别模式
-	ui.nonChineseInputWidget->hide(); // 隐藏非中文输入框
-
-    // 设置窗口始终在最上层
-    setWindowFlags(Qt::WindowStaysOnTopHint);
+    init();
 }
 
 KMainWindow::~KMainWindow() {
@@ -72,16 +63,16 @@ KMainWindow::~KMainWindow() {
 
 void KMainWindow::updateButtonLabels(const QStringList& labels) {
     if (labels.size() >= 10) {
-        ui.pushButton_5->setText(labels.at(0));
-        ui.pushButton_6->setText(labels.at(1));
-        ui.pushButton_7->setText(labels.at(2));
-        ui.pushButton_8->setText(labels.at(3));
-        ui.pushButton_9->setText(labels.at(4));
-        ui.pushButton_10->setText(labels.at(5));
-        ui.pushButton_11->setText(labels.at(6));
-        ui.pushButton_12->setText(labels.at(7));
-        ui.pushButton_13->setText(labels.at(8));
-        ui.pushButton_14->setText(labels.at(9));
+        ui.resultTextButton_1->setText(labels.at(0));
+        ui.resultTextButton_2->setText(labels.at(1));
+        ui.resultTextButton_3->setText(labels.at(2));
+        ui.resultTextButton_4->setText(labels.at(3));
+        ui.resultTextButton_5->setText(labels.at(4));
+        ui.resultTextButton_6->setText(labels.at(5));
+        ui.resultTextButton_7->setText(labels.at(6));
+        ui.resultTextButton_8->setText(labels.at(7));
+        ui.resultTextButton_9->setText(labels.at(8));
+        ui.resultTextButton_10->setText(labels.at(9));
     }
 }
 
@@ -89,17 +80,20 @@ void KMainWindow::updateUndoButton(bool canUndo) {
     ui.undoOneStrokeButton->setEnabled(canUndo); // 更新撤销按钮是否可用
 }
 
-void KMainWindow::updateClearButton(bool canClear) {
-    ui.clearStrokesButton->setEnabled(canClear); // 更新清空按钮是否可用
+void KMainWindow::mousePressEvent(QMouseEvent* event) {
+    // 阻止默认的聚焦行为
+
+    // 调用Windows API保持光标在窗口外活跃
+    //POINT cursorPos;
+    //GetCursorPos(&cursorPos);
+    
+    QMainWindow::mousePressEvent(event);
+    //SetCursorPos(cursorPos.x, cursorPos.y);
+
 }
 
-void KMainWindow::onClickedButton()
-{
-    QPushButton* button = qobject_cast<QPushButton*>(sender());
-    if (button) {
-        QString buttonText = button->text();
-        tsfManager->InsertTextAtCaret(buttonText.toStdWString().c_str());
-    }
+void KMainWindow::updateClearButton(bool canClear) {
+    ui.clearStrokesButton->setEnabled(canClear); // 更新清空按钮是否可用
 }
 
 void KMainWindow::updateCustomColorButtonColor()
@@ -126,7 +120,7 @@ void KMainWindow::setPenColorFromButton() {
 
 void KMainWindow::updateCustomWidthLineWidth() {
 	// 获取滑动条的值
-	int width = ui.lineWidthSpinBox->value();
+	int width = ui.lineWidthSpinBox->value()*20;
 	// 设置显示的线的粗细
 	ui.showCustomWidthLine->setMidLineWidth(width);
 	// 更新笔的粗细
@@ -182,10 +176,21 @@ void KMainWindow::showNonChineseInputWidget() {
 				it.key()->setEnabled(true);
 			}
 		}
+        ui.ChineseModeButton->setEnabled(true);
 	}
 	else { // error
 		qDebug() << "Error: showNonChineseInputWidget()";
 	}
+}
+
+void KMainWindow::hideNonChineseInputWidget() {
+	// 隐藏非中文输入框
+	ui.nonChineseInputWidget->hide();
+	// 设置按钮可用
+	ui.numberModeButton->setEnabled(true);
+	ui.letterModeButton->setEnabled(true);
+	ui.punctuationModeButton->setEnabled(true);
+    ui.ChineseModeButton->setEnabled(false);
 }
 
 void KMainWindow::updateNonChineseWidget(NonChineseInputMode mode) {
@@ -283,4 +288,45 @@ void KMainWindow::updateNonChineseWidget(NonChineseInputMode mode) {
 
 uint qHash(const KMainWindow::NonChineseInputMode& key, uint seed) noexcept {
     return ::qHash(static_cast<int>(key), seed);
+}
+
+void KMainWindow::sendText(QString text) {
+    //tsfManager->InsertTextAtCaret(reinterpret_cast<const wchar_t*>(text.utf16()));
+}
+
+void KMainWindow::init() {
+    updateButtonLabels(ScribbleArea::defaultRecognitionResults); // 更新显示的默认文字
+    updateUndoButton(false); // 更新撤销按钮状态
+    updateClearButton(false); // 更新清空按钮状态
+    updateCustomColorButtonColor(); // 更新showCustomColorButton的颜色
+    ui.tabWidget->tabBar()->hide(); // 隐藏tabBar
+    ui.autoModeButton->clicked(); // 默认自动识别模式
+    ui.nonChineseInputWidget->hide(); // 隐藏非中文输入框
+    ui.lineWidthSpinBox->setValue(4); // 设置默认的线宽
+    updateButtonFontSize(0); // 设置按钮的字体大小为小
+    // 设置窗口始终在最上层
+    setWindowFlags(Qt::WindowStaysOnTopHint);
+}
+
+void KMainWindow::updateButtonFontSize(int pattern) {
+    static const QMap<int, int> fontSizeMap = []() {
+        QMap<int, int> map;
+        map.insert(2, 20);  // 大
+        map.insert(1, 16);  // 中
+        map.insert(0, 12);  // 小
+        return map;
+    }();
+    int fontSize = fontSizeMap.value(pattern);
+    QList<SendTextButton*> sendTextButtons = ui.writingTab->findChildren<SendTextButton*>();
+    auto setFontSize = [](QPushButton* button, int size) {
+        QFont font = QApplication::font();
+        font.setPointSize(size);
+        button->setFont(font);
+        };
+    for (SendTextButton* button : sendTextButtons) {
+        if (button != ui.resultTextButton_1) {
+            setFontSize(button, fontSize);
+        }
+    }
+    setFontSize(ui.resultTextButton_1, fontSize*2);
 }

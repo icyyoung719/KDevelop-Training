@@ -8,8 +8,9 @@ SendTextButton::SendTextButton(QWidget* parent)
 
 void SendTextButton::mouseReleaseEvent(QMouseEvent* event) {
     if (event->button() == Qt::LeftButton && this->rect().contains(event->pos())) {
-        // 模拟 clicked 信号的行为
+        // 模拟输出到tsf，先用 qDebug 测试
         qDebug() << "Button clicked:" << this->text();
+        emit sendText(this->text());
 
         // 触发默认的 clicked 信号
         emit clicked();
