@@ -116,19 +116,49 @@ void KMainWindow::updateClearButton(bool canClear) {
 
 void KMainWindow::updateCustomColorButtonColor()
 {
-	// 获取滑动条的值
-	int r = ui.RValueSpinBox->value();
-	int g = ui.GValueSpinBox->value();
-	int b = ui.BValueSpinBox->value();
+    // 获取滑动条的值
+    int r = ui.RValueSpinBox->value();
+    int g = ui.GValueSpinBox->value();
+    int b = ui.BValueSpinBox->value();
 
-	// 设置按钮的背景颜色
-	ui.showCustomColorButton->setStyleSheet(QString("background-color: rgb(%1, %2, %3);").arg(r).arg(g).arg(b));
+    // 获取当前样式表
+    QString currentStyleSheet = ui.showCustomColorButton->styleSheet();
+
+    // 构造新的背景颜色样式
+    QString newBackgroundColor = QString("background-color: rgb(%1, %2, %3);").arg(r).arg(g).arg(b);
+
+    // 使用正则表达式更新背景颜色样式
+    QRegExp backgroundColorPattern("background-color: rgb\\(\\d+, \\d+, \\d+\\);");
+    if (backgroundColorPattern.indexIn(currentStyleSheet) != -1) {
+        // 如果存在背景颜色样式，则替换
+        currentStyleSheet.replace(backgroundColorPattern, newBackgroundColor);
+    }
+    else {
+        // 如果不存在背景颜色样式，则追加
+        currentStyleSheet.append(newBackgroundColor);
+    }
+
+    // 设置新的样式表
+    ui.showCustomColorButton->setStyleSheet(currentStyleSheet);
 }
 
 void KMainWindow::setPenColorFromButton() {
+    static QList<QPushButton*> buttons = {
+        ui.greyColorButton,
+        ui.redColorButton,
+        ui.yellowColorButton,
+        ui.greenColorButton,
+        ui.showCustomColorButton
+    };
     // 获取发送信号的按钮
     QPushButton* button = qobject_cast<QPushButton*>(sender());
     if (button) {
+        button->setDisabled(true);
+        for (QPushButton* b : buttons) {
+            if (b != button) {
+                b->setEnabled(true);
+            }
+        }
         // 获取按钮的背景颜色
         QColor color = button->palette().color(QPalette::Button);
         // 设置笔迹颜色
