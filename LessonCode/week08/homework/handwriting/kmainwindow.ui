@@ -1605,7 +1605,7 @@ QPushButton:pressed {
          <property name="styleSheet">
           <string notr="true">QPushButton
 {
-	background-color:rgb(79, 79, 79);
+	background-color:rgb(0, 0, 0);
 }
 </string>
          </property>

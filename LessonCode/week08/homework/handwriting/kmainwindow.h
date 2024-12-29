@@ -32,10 +32,12 @@ protected:
 private:
 	void updateNonChineseWidget(NonChineseInputMode mode); // 更新非中文输入的buttons的显示文字
 	uint qHash(const KMainWindow::NonChineseInputMode& key, uint seed = 0) noexcept;
+	void setDefaultPerferences();	// 将所有设置恢复到默认值
 
 
 // 有关init的函数
     void init();
+	void connectSignals();
 
 public slots:
     void updateButtonLabels(const QStringList& labels);
