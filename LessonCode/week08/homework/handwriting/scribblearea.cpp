@@ -91,9 +91,6 @@ void ScribbleArea::mouseReleaseEvent(QMouseEvent* event) {
         connect(watcher, &QFutureWatcher<QStringList>::finished, this, [this, watcher]() {
             QStringList results = watcher->result();
             emit recognitionResults(results);  // 发送识别结果信号
-            for (const QString& result : results) {
-                qDebug() << "Recognition Result:" << result;
-            }
             watcher->deleteLater();
             });
         watcher->setFuture(future);
@@ -206,6 +203,26 @@ QFuture<QStringList> ScribbleArea::recognizeInkAsync() {
             return results;
         }
 
+        // 设置识别模式
+        if (recognitionMode == RecognitionMode::Word) {
+            recognizerContext->put_Factoid(SysAllocString(L"FACTOID_ONECHAR"));// 设置识别模式为单词
+        }
+        else if (recognitionMode == RecognitionMode::Sentence) {
+            recognizerContext->put_Factoid(SysAllocString(L"FACTOID_DEFAULT"));// 设置识别模式为句子
+        }
+        else {
+            recognizerContext->put_Factoid(SysAllocString(L"FACTOID_DEFAULT"));// 设置识别模式为默认
+        }
+        BSTR factoid;
+        recognizerContext->get_Factoid(&factoid);
+        // 将 BSTR 转换为 QString
+        QString factoidString = QString::fromWCharArray(factoid);
+
+        // 使用 qDebug 输出
+        qDebug() << "Recognition Mode:" << factoidString;
+
+        // 释放 BSTR
+        SysFreeString(factoid);
         recognizerContext->putref_Strokes(strokes);
 
         // 调用 Recognize 方法
@@ -246,7 +263,6 @@ QFuture<QStringList> ScribbleArea::recognizeInkAsync() {
         });
 }
 
-// 撤销最后一个笔触
 void ScribbleArea::undo() {
     if (strokesList.empty()) {
         emit canUndoChanged(false); // 如果没有可以撤销的笔触，则禁用撤销按钮

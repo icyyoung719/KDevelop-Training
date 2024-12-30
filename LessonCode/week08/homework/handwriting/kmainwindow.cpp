@@ -21,7 +21,7 @@ void KMainWindow::init() {
     ui.autoModeButton->clicked(); // 默认自动识别模式
     ui.nonChineseInputWidget->hide(); // 隐藏非中文输入框
     ui.lineWidthSpinBox->setValue(4); // 设置默认的线宽
-    ui.greyColorButton->clicked();  // 设置默认的笔迹颜色为灰色
+    ui.blackColorButton->clicked();  // 设置默认的笔迹颜色为灰色
     updateButtonFontSize(0); // 设置按钮的字体大小为小
     setWindowFlags(Qt::WindowStaysOnTopHint); // 设置窗口始终在最上层
 }
@@ -37,9 +37,23 @@ void KMainWindow::connectSignals() {
 
     // 识别模式按钮
     connect(ui.autoModeButton, &QPushButton::clicked, this, &KMainWindow::updateRecognitionMode);
+    connect(ui.singleWordPushButton, &QPushButton::clicked, this, &KMainWindow::updateRecognitionMode);
+    connect(ui.sentencePushButton, &QPushButton::clicked, this, &KMainWindow::updateRecognitionMode);
 
     // 连接文字按钮点击信号到槽函数
     connect(ui.resultTextButton_1, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.resultTextButton_2, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.resultTextButton_3, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.resultTextButton_4, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.resultTextButton_5, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.resultTextButton_6, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.resultTextButton_7, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.resultTextButton_8, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.resultTextButton_9, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.resultTextButton_10, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.longTextButton, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.longTextButton_2, &SendTextButton::sendText, this, &KMainWindow::sendText);
+
 
     // 非中文输入按钮
     connect(ui.letterModeButton, &QPushButton::clicked, this, &KMainWindow::showNonChineseInputWidget);
@@ -58,7 +72,7 @@ void KMainWindow::connectSignals() {
     connect(ui.wordWidthComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &KMainWindow::updateButtonFontSize);
 
     // 将colorButton的clicked信号连接到ScribbleArea的setPenColor槽函数
-    connect(ui.greyColorButton, &QPushButton::clicked, this, &KMainWindow::setPenColorFromButton);
+    connect(ui.blackColorButton, &QPushButton::clicked, this, &KMainWindow::setPenColorFromButton);
     connect(ui.redColorButton, &QPushButton::clicked, this, &KMainWindow::setPenColorFromButton);
     connect(ui.yellowColorButton, &QPushButton::clicked, this, &KMainWindow::setPenColorFromButton);
     connect(ui.greenColorButton, &QPushButton::clicked, this, &KMainWindow::setPenColorFromButton);
@@ -144,7 +158,7 @@ void KMainWindow::updateCustomColorButtonColor()
 
 void KMainWindow::setPenColorFromButton() {
     static QList<QPushButton*> buttons = {
-        ui.greyColorButton,
+        ui.blackColorButton,
         ui.redColorButton,
         ui.yellowColorButton,
         ui.greenColorButton,
@@ -180,8 +194,8 @@ void KMainWindow::updateRecognitionMode() {
     // 创建按钮和识别模式的映射
     static const QHash<QPushButton*, ScribbleArea::RecognitionMode> modeMap = {
         {ui.autoModeButton, ScribbleArea::RecognitionMode::Auto},
-        {ui.letterModeButton, ScribbleArea::RecognitionMode::Word},
-        {ui.punctuationModeButton, ScribbleArea::RecognitionMode::Sentence}
+        {ui.singleWordPushButton, ScribbleArea::RecognitionMode::Word},
+        {ui.sentencePushButton, ScribbleArea::RecognitionMode::Sentence}
     };
 
     // 获取发送信号的按钮
@@ -340,6 +354,7 @@ uint qHash(const KMainWindow::NonChineseInputMode& key, uint seed) noexcept {
 
 void KMainWindow::sendText(QString text) {
     //tsfManager->InsertTextAtCaret(reinterpret_cast<const wchar_t*>(text.utf16()));
+    ui.scribblearea->clear();
 }
 
 void KMainWindow::updateButtonFontSize(int pattern) {
@@ -368,6 +383,6 @@ void KMainWindow::updateButtonFontSize(int pattern) {
 void KMainWindow::setDefaultPerferences() {
     ui.autoModeButton->clicked(); // 默认自动识别模式
     ui.lineWidthSpinBox->setValue(4); // 设置默认的线宽
-    ui.greyColorButton->clicked();  // 设置默认的笔迹颜色为灰色
+    ui.blackColorButton->clicked();  // 设置默认的笔迹颜色为黑色
     ui.wordWidthComboBox->setCurrentIndex(0); // 设置默认的文字宽度为小
 }

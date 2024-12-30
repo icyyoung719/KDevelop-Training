@@ -33,7 +33,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <property name="tabBarAutoHide">
      <bool>false</bool>
@@ -303,6 +303,36 @@ QPushButton:disabled {
         <height>61</height>
        </rect>
       </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    background-color: #3498db; /* 蓝色 */
+    border: none;               /* 移除边框 */
+    color: white;               /* 文本颜色 */
+    text-decoration: none;      /* 移除下划线 */
+    font-size: 16px;            /* 字体大小 */
+    border-radius: 8px;         /* 圆角 */
+    transition-duration: 0.4s;  /* 过渡效果持续时间 */
+}
+QPushButton:hover {
+    background-color: #2980b9;  /* 深蓝色 */
+    color: white;               /* 悬停时文本颜色 */
+}
+QPushButton:pressed {
+    background-color: #1f618d;  /* 更深的蓝色 */
+    color: white;               /* 按下时文本颜色 */
+}
+QPushButton:disabled {
+    background-color: #f39c12;  /* 橙色 */
+    color: white;               /* 禁用时文本颜色 */
+    font-size: 16px;            /* 字体大小 */
+    border: none;               /* 移除边框 */
+    text-align: center;         /* 文本居中 */
+    text-decoration: none;      /* 移除下划线 */
+    margin: 4px 2px;            /* 外边距 */
+    border-radius: 8px;         /* 圆角 */
+    transition-duration: 0.4s;  /* 过渡效果持续时间 */
+}</string>
+      </property>
       <property name="text">
        <string>单字手写</string>
       </property>
@@ -315,6 +345,36 @@ QPushButton:disabled {
         <width>111</width>
         <height>61</height>
        </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    background-color: #3498db; /* 蓝色 */
+    border: none;               /* 移除边框 */
+    color: white;               /* 文本颜色 */
+    text-decoration: none;      /* 移除下划线 */
+    font-size: 16px;            /* 字体大小 */
+    border-radius: 8px;         /* 圆角 */
+    transition-duration: 0.4s;  /* 过渡效果持续时间 */
+}
+QPushButton:hover {
+    background-color: #2980b9;  /* 深蓝色 */
+    color: white;               /* 悬停时文本颜色 */
+}
+QPushButton:pressed {
+    background-color: #1f618d;  /* 更深的蓝色 */
+    color: white;               /* 按下时文本颜色 */
+}
+QPushButton:disabled {
+    background-color: #f39c12;  /* 橙色 */
+    color: white;               /* 禁用时文本颜色 */
+    font-size: 16px;            /* 字体大小 */
+    border: none;               /* 移除边框 */
+    text-align: center;         /* 文本居中 */
+    text-decoration: none;      /* 移除下划线 */
+    margin: 4px 2px;            /* 外边距 */
+    border-radius: 8px;         /* 圆角 */
+    transition-duration: 0.4s;  /* 过渡效果持续时间 */
+}</string>
       </property>
       <property name="text">
        <string>长句手写</string>
@@ -1613,7 +1673,7 @@ QPushButton#showCustomColorButton:hover {
       </property>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
-        <widget class="QPushButton" name="greyColorButton">
+        <widget class="QPushButton" name="blackColorButton">
          <property name="styleSheet">
           <string notr="true">QPushButton {
     background-color: rgb(0, 0, 0);
