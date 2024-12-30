@@ -21,7 +21,7 @@ void KMainWindow::init() {
     ui.autoModeButton->clicked(); // 默认自动识别模式
     ui.nonChineseInputWidget->hide(); // 隐藏非中文输入框
     ui.lineWidthSpinBox->setValue(4); // 设置默认的线宽
-    ui.blackColorButton->clicked();  // 设置默认的笔迹颜色为灰色
+    ui.blackColorButton->clicked();  // 设置默认的笔迹颜色为黑色
     updateButtonFontSize(0); // 设置按钮的字体大小为小
     setWindowFlags(Qt::WindowStaysOnTopHint); // 设置窗口始终在最上层
 }
@@ -51,8 +51,8 @@ void KMainWindow::connectSignals() {
     connect(ui.resultTextButton_8, &SendTextButton::sendText, this, &KMainWindow::sendText);
     connect(ui.resultTextButton_9, &SendTextButton::sendText, this, &KMainWindow::sendText);
     connect(ui.resultTextButton_10, &SendTextButton::sendText, this, &KMainWindow::sendText);
-    connect(ui.longTextButton, &SendTextButton::sendText, this, &KMainWindow::sendText);
-    connect(ui.longTextButton_2, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    //connect(ui.longTextButton, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    //connect(ui.longTextButton_2, &SendTextButton::sendText, this, &KMainWindow::sendText);
 
 
     // 非中文输入按钮
@@ -106,6 +106,7 @@ void KMainWindow::updateButtonLabels(const QStringList& labels) {
         ui.resultTextButton_9->setText(labels.at(8));
         ui.resultTextButton_10->setText(labels.at(9));
     }
+
 }
 
 void KMainWindow::updateUndoButton(bool canUndo) {

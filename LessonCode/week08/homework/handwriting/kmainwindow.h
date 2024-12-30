@@ -40,7 +40,7 @@ private:
 	void connectSignals();
 
 public slots:
-    void updateButtonLabels(const QStringList& labels);
+    void updateButtonLabels(const QStringList& labels); // 更新按钮文字
 	void updateCustomColorButtonColor(); // 用于更新showCustomColorButton的颜色
 	void setPenColorFromButton(); // 用于在点击颜色按钮时设置笔的颜色
 	void updateButtonFontSize(int pattern); // 更新字体大小
