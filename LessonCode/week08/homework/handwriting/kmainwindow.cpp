@@ -21,9 +21,10 @@ void KMainWindow::init() {
     ui.autoModeButton->clicked(); // 默认自动识别模式
     ui.nonChineseInputWidget->hide(); // 隐藏非中文输入框
     ui.lineWidthSpinBox->setValue(4); // 设置默认的线宽
-    ui.blackColorButton->clicked();  // 设置默认的笔迹颜色为黑色
     updateButtonFontSize(0); // 设置按钮的字体大小为小
-    setWindowFlags(Qt::WindowStaysOnTopHint); // 设置窗口始终在最上层
+    setWindowFlags( Qt::WindowStaysOnTopHint); // 设置窗口始终在最上层
+    ui.blackColorButton->clicked();  // 设置默认的笔迹颜色为黑色
+    //setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowDoesNotAcceptFocus | Qt::WindowStaysOnTopHint);
 }
 
 void KMainWindow::connectSignals() {
@@ -51,6 +52,60 @@ void KMainWindow::connectSignals() {
     connect(ui.resultTextButton_8, &SendTextButton::sendText, this, &KMainWindow::sendText);
     connect(ui.resultTextButton_9, &SendTextButton::sendText, this, &KMainWindow::sendText);
     connect(ui.resultTextButton_10, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton1_1, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton1_2, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton1_3, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton1_4, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton1_5, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton1_6, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton1_7, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton1_8, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton1_9, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton2_1, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton2_2, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton2_3, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton2_4, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton2_5, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton2_6, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton2_7, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton2_8, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton2_9, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton3_1, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton3_2, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton3_3, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton3_4, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton3_5, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton3_6, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton3_7, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton3_8, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton3_9, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton4_1, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton4_2, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton4_3, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton4_4, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton4_5, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton4_6, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton4_7, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton4_8, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton4_9, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton5_1, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton5_2, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton5_3, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton5_4, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton5_5, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton5_6, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton5_7, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton5_8, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton5_9, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton6_1, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton6_2, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton6_3, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton6_4, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton6_5, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton6_6, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton6_7, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton6_8, &SendTextButton::sendText, this, &KMainWindow::sendText);
+    connect(ui.nonChineseSendButton6_9, &SendTextButton::sendText, this, &KMainWindow::sendText);
     //connect(ui.longTextButton, &SendTextButton::sendText, this, &KMainWindow::sendText);
     //connect(ui.longTextButton_2, &SendTextButton::sendText, this, &KMainWindow::sendText);
 
@@ -119,10 +174,12 @@ void KMainWindow::mousePressEvent(QMouseEvent* event) {
     // 调用Windows API保持光标在窗口外活跃
     //POINT cursorPos;
     //GetCursorPos(&cursorPos);
-    
+    HWND focusedWindow = GetForegroundWindow();
+    // 保持当前输入焦点的窗口不变
+    if (focusedWindow != reinterpret_cast<HWND>(winId())) {
+        SetForegroundWindow(focusedWindow);
+    }
     QMainWindow::mousePressEvent(event);
-    //SetCursorPos(cursorPos.x, cursorPos.y);
-
 }
 
 void KMainWindow::updateClearButton(bool canClear) {
@@ -356,6 +413,20 @@ uint qHash(const KMainWindow::NonChineseInputMode& key, uint seed) noexcept {
 void KMainWindow::sendText(QString text) {
     //tsfManager->InsertTextAtCaret(reinterpret_cast<const wchar_t*>(text.utf16()));
     ui.scribblearea->clear();
+    ui.lineEdit->insert(text);
+    //std::wstring wText = text.toStdWString();
+    //for (wchar_t c : wText) {
+    //    INPUT input = {};
+    //    input.type = INPUT_KEYBOARD;
+    //    input.ki.wVk = 0; // 不使用虚拟键码
+    //    input.ki.wScan = c; // 设置 Unicode 字符
+    //    input.ki.dwFlags = KEYEVENTF_UNICODE;
+    //    SendInput(1, &input, sizeof(INPUT));
+
+    //    // 释放键
+    //    input.ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+    //    SendInput(1, &input, sizeof(INPUT));
+    //}
 }
 
 void KMainWindow::updateButtonFontSize(int pattern) {

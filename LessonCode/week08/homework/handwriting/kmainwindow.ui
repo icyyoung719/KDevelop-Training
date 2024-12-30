@@ -33,7 +33,7 @@
      <enum>QTabWidget::Rounded</enum>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <property name="tabBarAutoHide">
      <bool>false</bool>
@@ -1453,6 +1453,16 @@ QPushButton:pressed {
         </item>
        </layout>
       </widget>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>470</y>
+        <width>113</width>
+        <height>21</height>
+       </rect>
+      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="settingTab">
