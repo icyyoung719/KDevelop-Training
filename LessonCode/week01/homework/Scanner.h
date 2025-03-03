@@ -7,6 +7,7 @@ namespace json
 	class Scanner
 	{
 	public:
+		Scanner() = default;
 		Scanner(std::string& source) : source_(source), current_pos_(0) {}
 		Scanner(const std::string&& source) : source_(source), current_pos_(0) {}
 

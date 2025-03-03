@@ -5,6 +5,7 @@
 namespace json {
     class Parser {
     public:
+        Parser() = default;
         Parser(const Scanner& scanner) : scanner_(scanner) {}
         explicit Parser(Scanner&& scanner) : scanner_(std::move(scanner)) {}
         std::unique_ptr<JsonElement> Parse();
